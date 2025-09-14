@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { mockGallery } from "../utils/mockApi";
 import { useToast } from "../contexts/ToastContext";
 import DashboardLayout from "../components/DashboardLayout";
@@ -15,6 +15,7 @@ const GalleryPage = () => {
   const [hasMore, setHasMore] = useState(true);
   const [viewMode, setViewMode] = useState("grid"); // grid, masonry
   const [sortBy, setSortBy] = useState("newest");
+  const [filterBy, setFilterBy] = useState("all"); // all, uploaded, mock
   const { error: toastError } = useToast();
 
   const loadImages = useCallback(
@@ -50,6 +51,56 @@ const GalleryPage = () => {
     loadImages(1);
   }, [loadImages]);
 
+  // Filter and sort images
+  const filteredAndSortedImages = useMemo(() => {
+    let filtered = images;
+
+    // Apply filter
+    if (filterBy === "uploaded") {
+      filtered = images.filter((img) => img.isUploaded);
+    } else if (filterBy === "mock") {
+      filtered = images.filter((img) => !img.isUploaded);
+    }
+
+    // Apply sort
+    return filtered.sort((a, b) => {
+      switch (sortBy) {
+        case "newest":
+          if (a.uploadedAt && b.uploadedAt) {
+            return new Date(b.uploadedAt) - new Date(a.uploadedAt);
+          }
+          // For mixed types, prioritize uploaded images (which have uploadedAt)
+          if (a.uploadedAt && !b.uploadedAt) return -1;
+          if (!a.uploadedAt && b.uploadedAt) return 1;
+          // For same type, use ID comparison safely
+          const aId =
+            typeof a.id === "string" ? parseInt(a.id.split("_")[1]) || 0 : a.id;
+          const bId =
+            typeof b.id === "string" ? parseInt(b.id.split("_")[1]) || 0 : b.id;
+          return bId - aId;
+        case "oldest":
+          if (a.uploadedAt && b.uploadedAt) {
+            return new Date(a.uploadedAt) - new Date(b.uploadedAt);
+          }
+          // For mixed types, prioritize mock images (older)
+          if (a.uploadedAt && !b.uploadedAt) return 1;
+          if (!a.uploadedAt && b.uploadedAt) return -1;
+          // For same type, use ID comparison safely
+          const aIdOld =
+            typeof a.id === "string" ? parseInt(a.id.split("_")[1]) || 0 : a.id;
+          const bIdOld =
+            typeof b.id === "string" ? parseInt(b.id.split("_")[1]) || 0 : b.id;
+          return aIdOld - bIdOld;
+        case "name":
+          return a.title.localeCompare(b.title);
+        case "annotated":
+          return (b.annotations?.length || 0) - (a.annotations?.length || 0);
+        default:
+          return 0;
+      }
+    });
+  }, [images, filterBy, sortBy]);
+
   const handleLoadMore = () => {
     if (!loadingMore && hasMore) {
       loadImages(currentPage + 1, true);
@@ -65,8 +116,11 @@ const GalleryPage = () => {
   };
 
   const handleModalIndexChange = (newIndex) => {
-    if (newIndex >= 0 && newIndex < images.length) {
-      setSelectedImage({ image: images[newIndex], index: newIndex });
+    if (newIndex >= 0 && newIndex < filteredAndSortedImages.length) {
+      setSelectedImage({
+        image: filteredAndSortedImages[newIndex],
+        index: newIndex,
+      });
     }
   };
 
@@ -132,6 +186,20 @@ const GalleryPage = () => {
             {image.annotations.length !== 1 ? "s" : ""}
           </div>
         )}
+
+        {/* Uploaded image badge */}
+        {image.isUploaded && (
+          <div className="absolute top-2 left-2 bg-green-600 text-white text-xs px-2 py-1 rounded-full flex items-center gap-1">
+            <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+              <path
+                fillRule="evenodd"
+                d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM6.293 6.707a1 1 0 010-1.414l3-3a1 1 0 011.414 0l3 3a1 1 0 01-1.414 1.414L11 5.414V13a1 1 0 11-2 0V5.414L7.707 6.707a1 1 0 01-1.414 0z"
+                clipRule="evenodd"
+              />
+            </svg>
+            Uploaded
+          </div>
+        )}
       </div>
 
       <div className="p-3">
@@ -155,11 +223,24 @@ const GalleryPage = () => {
               Photo Gallery
             </h1>
             <p className="text-gray-600 dark:text-gray-400 mt-1">
-              {loading ? "Loading..." : `${images.length} images`}
+              {loading
+                ? "Loading..."
+                : `${filteredAndSortedImages.length} images`}
             </p>
           </div>
 
           <div className="flex items-center space-x-3">
+            {/* Filter dropdown */}
+            <select
+              value={filterBy}
+              onChange={(e) => setFilterBy(e.target.value)}
+              className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="all">All Images</option>
+              <option value="uploaded">Uploaded Only</option>
+              <option value="mock">Gallery Only</option>
+            </select>
+
             {/* Sort dropdown */}
             <select
               value={sortBy}
@@ -256,7 +337,7 @@ const GalleryPage = () => {
                   : "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
               }`}
             >
-              {images.map((image, index) => (
+              {filteredAndSortedImages.map((image, index) => (
                 <ImageCard
                   key={image.id}
                   image={image}
@@ -294,7 +375,7 @@ const GalleryPage = () => {
           <ImageModal
             isOpen={true}
             onClose={handleCloseModal}
-            images={images}
+            images={filteredAndSortedImages}
             currentIndex={selectedImage.index}
             onIndexChange={handleModalIndexChange}
           />

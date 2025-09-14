@@ -647,3 +647,5 @@ const SettingsPage = () => {
     </DashboardLayout>
   );
 };
+
+export default SettingsPage;

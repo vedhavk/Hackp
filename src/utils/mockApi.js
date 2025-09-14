@@ -169,22 +169,38 @@ export const mockGallery = {
   async getImages(page = 1, limit = 10) {
     await delay(800);
 
+    const storedAnnotations = getStoredAnnotations();
+    const uploadedImages = getStoredUploadedImages();
+
+    // Combine uploaded images with mock images
+    // Add uploaded images at the beginning (most recent first)
+    const allImages = [
+      ...uploadedImages.map((img) => ({
+        ...img,
+        // Ensure uploaded images have the required gallery format
+        thumbnail: img.url, // Use the same URL for thumbnail
+        title: img.filename || `Uploaded Image ${img.id}`,
+        annotations: storedAnnotations[img.id] || [],
+        uploadedAt: img.uploadedAt,
+        isUploaded: true,
+      })),
+      ...mockImages.map((image) => ({
+        ...image,
+        annotations: storedAnnotations[image.id] || image.annotations || [],
+        isUploaded: false,
+      })),
+    ];
+
     const start = (page - 1) * limit;
     const end = start + limit;
-    const storedAnnotations = getStoredAnnotations();
-
-    // Return images with persisted annotations
-    const images = mockImages.slice(start, end).map((image) => ({
-      ...image,
-      annotations: storedAnnotations[image.id] || image.annotations || [],
-    }));
+    const images = allImages.slice(start, end);
 
     return {
       images,
-      total: mockImages.length,
+      total: allImages.length,
       page,
-      totalPages: Math.ceil(mockImages.length / limit),
-      hasMore: end < mockImages.length,
+      totalPages: Math.ceil(allImages.length / limit),
+      hasMore: end < allImages.length,
     };
   },
 
@@ -192,6 +208,22 @@ export const mockGallery = {
     await delay(500);
 
     const storedAnnotations = getStoredAnnotations();
+
+    // First check if it's an uploaded image (string ID)
+    const uploadedImages = getStoredUploadedImages();
+    const uploadedImage = uploadedImages.find((img) => img.id === id);
+
+    if (uploadedImage) {
+      return {
+        ...uploadedImage,
+        thumbnail: uploadedImage.url,
+        title: uploadedImage.filename || `Uploaded Image ${uploadedImage.id}`,
+        annotations: storedAnnotations[id] || [],
+        isUploaded: true,
+      };
+    }
+
+    // Then check mock images (integer ID)
     const imageId = parseInt(id);
     const image = mockImages.find((img) => img.id === imageId);
     if (!image) {
@@ -202,6 +234,7 @@ export const mockGallery = {
     return {
       ...image,
       annotations: storedAnnotations[imageId] || image.annotations || [],
+      isUploaded: false,
     };
   },
 };
