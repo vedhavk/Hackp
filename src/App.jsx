@@ -16,6 +16,7 @@ import RegisterPage from "./pages/RegisterPage";
 import DashboardPage from "./pages/DashboardPage";
 import GalleryPage from "./pages/GalleryPage";
 import AnnotationsPage from "./pages/AnnotationsPage";
+import UploadAndAnnotatePage from "./pages/UploadAndAnnotatePage";
 
 // Toast Display Component
 const ToastDisplay = () => {
@@ -51,6 +52,15 @@ const App = () => {
                     element={
                       <ProtectedRoute>
                         <GalleryPage />
+                      </ProtectedRoute>
+                    }
+                  />
+
+                  <Route
+                    path="/upload"
+                    element={
+                      <ProtectedRoute>
+                        <UploadAndAnnotatePage />
                       </ProtectedRoute>
                     }
                   />

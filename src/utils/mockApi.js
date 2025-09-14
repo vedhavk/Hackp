@@ -211,8 +211,12 @@ export const mockAnnotations = {
   async saveAnnotation(imageId, annotation) {
     await delay(800);
 
-    const image = mockImages.find((img) => img.id === parseInt(imageId));
-    if (!image) {
+    // Check if it's a gallery image or uploaded image
+    const galleryImage = mockImages.find((img) => img.id === parseInt(imageId));
+    const uploadedImages = getStoredUploadedImages();
+    const uploadedImage = uploadedImages.find((img) => img.id === imageId);
+
+    if (!galleryImage && !uploadedImage) {
       throw new Error("Image not found");
     }
 
@@ -229,62 +233,119 @@ export const mockAnnotations = {
 
     // Persist to localStorage for data persistence across refreshes
     const storedAnnotations = getStoredAnnotations();
-    const imageIdNum = parseInt(imageId);
-    if (!storedAnnotations[imageIdNum]) {
-      storedAnnotations[imageIdNum] = [];
+    // Use imageId as string for uploaded images to avoid conflicts
+    const imageKey = uploadedImage ? imageId : parseInt(imageId);
+    if (!storedAnnotations[imageKey]) {
+      storedAnnotations[imageKey] = [];
     }
-    storedAnnotations[imageIdNum].push(newAnnotation);
+    storedAnnotations[imageKey].push(newAnnotation);
     saveAnnotationsToStorage(storedAnnotations);
 
     return newAnnotation;
+  },
+
+  async getAnnotations(imageId) {
+    await delay(300);
+
+    const storedAnnotations = getStoredAnnotations();
+    // Use imageId as is for uploaded images (string), convert to int for gallery images
+    const uploadedImages = getStoredUploadedImages();
+    const isUploadedImage = uploadedImages.some((img) => img.id === imageId);
+    const imageKey = isUploadedImage ? imageId : parseInt(imageId);
+
+    return storedAnnotations[imageKey] || [];
   },
 
   async updateAnnotation(imageId, annotationId, updates) {
     await delay(600);
 
     const storedAnnotations = getStoredAnnotations();
-    const imageIdNum = parseInt(imageId);
+    // Handle both uploaded and gallery images
+    const uploadedImages = getStoredUploadedImages();
+    const isUploadedImage = uploadedImages.some((img) => img.id === imageId);
+    const imageKey = isUploadedImage ? imageId : parseInt(imageId);
 
-    if (!storedAnnotations[imageIdNum]) {
+    if (!storedAnnotations[imageKey]) {
       throw new Error("Image not found");
     }
 
-    const annotationIndex = storedAnnotations[imageIdNum].findIndex(
+    const annotationIndex = storedAnnotations[imageKey].findIndex(
       (ann) => ann.id === annotationId
     );
     if (annotationIndex === -1) {
       throw new Error("Annotation not found");
     }
 
-    storedAnnotations[imageIdNum][annotationIndex] = {
-      ...storedAnnotations[imageIdNum][annotationIndex],
+    storedAnnotations[imageKey][annotationIndex] = {
+      ...storedAnnotations[imageKey][annotationIndex],
       ...updates,
       updatedAt: new Date().toISOString(),
     };
 
     saveAnnotationsToStorage(storedAnnotations);
-    return storedAnnotations[imageIdNum][annotationIndex];
+    return storedAnnotations[imageKey][annotationIndex];
   },
 
   async deleteAnnotation(imageId, annotationId) {
     await delay(500);
 
     const storedAnnotations = getStoredAnnotations();
-    const imageIdNum = parseInt(imageId);
+    // Handle both uploaded and gallery images
+    const uploadedImages = getStoredUploadedImages();
+    const isUploadedImage = uploadedImages.some((img) => img.id === imageId);
+    const imageKey = isUploadedImage ? imageId : parseInt(imageId);
 
-    if (!storedAnnotations[imageIdNum]) {
+    if (!storedAnnotations[imageKey]) {
       throw new Error("Image not found");
     }
 
-    const annotationIndex = storedAnnotations[imageIdNum].findIndex(
+    const annotationIndex = storedAnnotations[imageKey].findIndex(
       (ann) => ann.id === annotationId
     );
     if (annotationIndex === -1) {
       throw new Error("Annotation not found");
     }
 
-    storedAnnotations[imageIdNum].splice(annotationIndex, 1);
+    storedAnnotations[imageKey].splice(annotationIndex, 1);
     saveAnnotationsToStorage(storedAnnotations);
+    return { success: true };
+  },
+};
+
+// Storage functions for uploaded images
+const getStoredUploadedImages = () => {
+  const stored = localStorage.getItem("uploadedImages");
+  return stored ? JSON.parse(stored) : [];
+};
+
+const saveUploadedImagesToStorage = (images) => {
+  localStorage.setItem("uploadedImages", JSON.stringify(images));
+};
+
+// Mock uploaded images API
+export const mockUploadedImages = {
+  async saveImage(imageData) {
+    await delay(500);
+
+    const uploadedImages = getStoredUploadedImages();
+    uploadedImages.push(imageData);
+    saveUploadedImagesToStorage(uploadedImages);
+
+    return { success: true, image: imageData };
+  },
+
+  async getUploadedImages() {
+    await delay(200);
+    return getStoredUploadedImages();
+  },
+
+  async deleteImage(imageId) {
+    await delay(300);
+
+    const uploadedImages = getStoredUploadedImages();
+    const filteredImages = uploadedImages.filter((img) => img.id !== imageId);
+    saveUploadedImagesToStorage(filteredImages);
+
     return { success: true };
   },
 };

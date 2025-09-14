@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import { mockGallery } from "../utils/mockApi";
 import { useToast } from "../contexts/ToastContext";
 import DashboardLayout from "../components/DashboardLayout";
@@ -12,10 +13,23 @@ const AnnotationsPage = () => {
   const [showAnnotator, setShowAnnotator] = useState(false);
   const [filter, setFilter] = useState("all"); // all, annotated, unannotated
   const { error: toastError, success: toastSuccess } = useToast();
+  const location = useLocation();
 
   useEffect(() => {
     loadImages();
   }, []);
+
+  // Handle navigation from search
+  useEffect(() => {
+    if (location.state?.selectedImageId && images.length > 0) {
+      const selectedImg = images.find(
+        (img) => img.id === location.state.selectedImageId
+      );
+      if (selectedImg) {
+        handleImageSelect(selectedImg);
+      }
+    }
+  }, [images, location.state]);
 
   const loadImages = async () => {
     try {

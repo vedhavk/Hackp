@@ -1,18 +1,156 @@
-import React, { useState } from "react";
+import React, { useState, useCallback, useEffect, useRef } from "react";
 import PropTypes from "prop-types";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
-import { Button, ThemeToggle } from "../components/ui";
+import { Button, ThemeToggle, Modal } from "../components/ui";
+import { mockGallery } from "../utils/mockApi";
 
 const DashboardLayout = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [notificationOpen, setNotificationOpen] = useState(false);
+  const [notifications, setNotifications] = useState([
+    {
+      id: 1,
+      title: "New annotation added",
+      message: "You've successfully annotated Image 3",
+      time: "2 minutes ago",
+      read: false,
+    },
+    {
+      id: 2,
+      title: "Annotation updated",
+      message: "Annotation on Image 1 was modified",
+      time: "1 hour ago",
+      read: false,
+    },
+    {
+      id: 3,
+      title: "Welcome!",
+      message: "Welcome to PhotoAnnotator. Start annotating your images.",
+      time: "2 hours ago",
+      read: true,
+    },
+  ]);
   const { user, logout } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
+  const searchInputRef = useRef(null);
 
   const handleLogout = () => {
     logout();
   };
+
+  // Simple search function without complex debouncing
+  const handleSearch = useCallback(async (query) => {
+    if (!query.trim()) {
+      setSearchResults([]);
+      setIsSearching(false);
+      return;
+    }
+
+    setIsSearching(true);
+    try {
+      const response = await mockGallery.getImages(1, 50);
+      const filtered = response.images.filter((image) => {
+        const titleMatch = image.title
+          .toLowerCase()
+          .includes(query.toLowerCase());
+        const annotationMatch = image.annotations?.some((ann) =>
+          ann.label.toLowerCase().includes(query.toLowerCase())
+        );
+        return titleMatch || annotationMatch;
+      });
+      setSearchResults(filtered);
+    } catch (error) {
+      console.error("Search failed:", error);
+      setSearchResults([]);
+    } finally {
+      setIsSearching(false);
+    }
+  }, []);
+
+  // Search effect with proper cleanup
+  useEffect(() => {
+    if (!searchQuery.trim()) {
+      setSearchResults([]);
+      setIsSearching(false);
+      return;
+    }
+
+    setIsSearching(true);
+    const timeoutId = setTimeout(() => {
+      handleSearch(searchQuery);
+    }, 300);
+
+    return () => {
+      clearTimeout(timeoutId);
+    };
+  }, [searchQuery, handleSearch]);
+
+  // Simple search input handler - no automatic search
+  const handleSearchInputChange = (e) => {
+    setSearchQuery(e.target.value);
+  };
+
+  // Manual search trigger
+  const handleSearchSubmit = () => {
+    if (searchQuery.trim()) {
+      handleSearch(searchQuery);
+    } else {
+      setSearchResults([]);
+      setIsSearching(false);
+    }
+  };
+
+  // Handle Enter key press
+  const handleSearchKeyPress = (e) => {
+    if (e.key === "Enter") {
+      handleSearchSubmit();
+    }
+  };
+
+  const handleSearchSelect = (image) => {
+    setSearchOpen(false);
+    setSearchQuery("");
+    setSearchResults([]);
+    navigate(`/annotations`, { state: { selectedImageId: image.id } });
+  };
+
+  const handleNotificationClick = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    console.log("Notification bell clicked! Current state:", notificationOpen);
+    setNotificationOpen((prev) => !prev);
+  };
+
+  const markNotificationAsRead = (id) => {
+    setNotifications((prev) =>
+      prev.map((notif) => (notif.id === id ? { ...notif, read: true } : notif))
+    );
+  };
+
+  const unreadCount = notifications.filter((n) => !n.read).length;
+
+  // Close notification dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        notificationOpen &&
+        !event.target.closest(".notification-dropdown") &&
+        !event.target.closest(".notification-button")
+      ) {
+        setNotificationOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [notificationOpen]);
 
   const navigation = [
     {
@@ -36,6 +174,25 @@ const DashboardLayout = ({ children }) => {
             strokeLinejoin="round"
             strokeWidth={2}
             d="M8 5a2 2 0 012-2h4a2 2 0 012 2v4H8V5z"
+          />
+        </svg>
+      ),
+    },
+    {
+      name: "Upload",
+      href: "/upload",
+      icon: (
+        <svg
+          className="w-5 h-5"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M12 4v16m8-8H4"
           />
         </svg>
       ),
@@ -437,7 +594,10 @@ const DashboardLayout = ({ children }) => {
 
             <div className="flex items-center space-x-4">
               {/* Search button */}
-              <button className="p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-all duration-200">
+              <button
+                onClick={() => setSearchOpen(true)}
+                className="p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-all duration-200"
+              >
                 <svg
                   className="w-5 h-5"
                   fill="none"
@@ -454,22 +614,99 @@ const DashboardLayout = ({ children }) => {
               </button>
 
               {/* Notifications */}
-              <button className="relative p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-all duration-200">
-                <svg
-                  className="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
+              <div className="relative">
+                <button
+                  onClick={handleNotificationClick}
+                  className="notification-button relative p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-all duration-200 z-10"
+                  style={{ cursor: "pointer" }}
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M15 17h5l-5 5h5m-5-5V8a3 3 0 10-6 0v9"
-                  />
-                </svg>
-                <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full border-2 border-white dark:border-gray-900"></div>
-              </button>
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M15 17h5l-5 5h5m-5-5V8a3 3 0 10-6 0v9"
+                    />
+                  </svg>
+                  {unreadCount > 0 && (
+                    <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full border-2 border-white dark:border-gray-900">
+                      <span className="sr-only">
+                        {unreadCount} unread notifications
+                      </span>
+                    </div>
+                  )}
+                </button>
+
+                {/* Notification Dropdown */}
+                {notificationOpen && (
+                  <div className="notification-dropdown absolute right-0 mt-2 w-80 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-50">
+                    <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                        Notifications
+                      </h3>
+                    </div>
+                    <div className="max-h-96 overflow-y-auto">
+                      {notifications.length === 0 ? (
+                        <div className="p-4 text-center text-gray-500 dark:text-gray-400">
+                          No notifications
+                        </div>
+                      ) : (
+                        notifications.map((notification) => (
+                          <div
+                            key={notification.id}
+                            onClick={() =>
+                              markNotificationAsRead(notification.id)
+                            }
+                            className={`p-4 border-b border-gray-100 dark:border-gray-700 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors ${
+                              !notification.read
+                                ? "bg-blue-50 dark:bg-blue-900/20"
+                                : ""
+                            }`}
+                          >
+                            <div className="flex items-start space-x-3">
+                              <div
+                                className={`w-2 h-2 rounded-full mt-2 ${
+                                  !notification.read
+                                    ? "bg-blue-500"
+                                    : "bg-gray-300"
+                                }`}
+                              />
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm font-medium text-gray-900 dark:text-white">
+                                  {notification.title}
+                                </p>
+                                <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
+                                  {notification.message}
+                                </p>
+                                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                  {notification.time}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                    <div className="p-3 border-t border-gray-200 dark:border-gray-700">
+                      <button
+                        onClick={() =>
+                          setNotifications((prev) =>
+                            prev.map((n) => ({ ...n, read: true }))
+                          )
+                        }
+                        className="text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
+                      >
+                        Mark all as read
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
 
               {/* Theme toggle */}
               <ThemeToggle className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300" />
@@ -515,6 +752,139 @@ const DashboardLayout = ({ children }) => {
         {/* Page content */}
         <main className="flex-1 overflow-y-auto">{children}</main>
       </div>
+
+      {/* Search Modal */}
+      <Modal
+        isOpen={searchOpen}
+        onClose={() => {
+          setSearchOpen(false);
+          setSearchQuery("");
+          setSearchResults([]);
+        }}
+        title="Search Images"
+        size="lg"
+      >
+        <div className="space-y-4">
+          {/* Search Input */}
+          <div className="relative">
+            <input
+              ref={searchInputRef}
+              type="text"
+              value={searchQuery}
+              onChange={handleSearchInputChange}
+              onKeyPress={handleSearchKeyPress}
+              placeholder="Search by image title or annotation... (Press Enter)"
+              className="w-full pl-10 pr-12 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              autoFocus
+            />
+            <svg
+              className="absolute left-3 top-2.5 w-5 h-5 text-gray-400"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+              />
+            </svg>
+            <button
+              onClick={handleSearchSubmit}
+              className="absolute right-2 top-1.5 p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+            >
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M13 5l7 7-7 7"
+                />
+              </svg>
+            </button>
+          </div>
+
+          {/* Search Results */}
+          <div className="max-h-96 overflow-y-auto">
+            {isSearching ? (
+              <div className="text-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto"></div>
+                <p className="text-gray-500 dark:text-gray-400 mt-2">
+                  Searching...
+                </p>
+              </div>
+            ) : searchQuery && searchResults.length === 0 ? (
+              <div className="text-center py-8">
+                <p className="text-gray-500 dark:text-gray-400">
+                  No results found
+                </p>
+              </div>
+            ) : searchResults.length > 0 ? (
+              <div className="grid grid-cols-1 gap-3">
+                {searchResults.map((image) => (
+                  <div
+                    key={image.id}
+                    onClick={() => handleSearchSelect(image)}
+                    className="flex items-center space-x-3 p-3 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg cursor-pointer transition-colors"
+                  >
+                    <img
+                      src={image.thumbnail}
+                      alt={image.title}
+                      className="w-12 h-12 object-cover rounded-lg"
+                    />
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                        {image.title}
+                      </h3>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                        {image.annotations?.length || 0} annotations
+                      </p>
+                    </div>
+                    <svg
+                      className="w-4 h-4 text-gray-400"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M9 5l7 7-7 7"
+                      />
+                    </svg>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <svg
+                  className="w-16 h-16 text-gray-300 dark:text-gray-600 mx-auto mb-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                  />
+                </svg>
+                <p className="text-gray-500 dark:text-gray-400">
+                  Start typing to search for images...
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 };
