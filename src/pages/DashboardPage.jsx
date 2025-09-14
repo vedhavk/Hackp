@@ -34,24 +34,35 @@ const DashboardPage = () => {
           action: "Image uploaded",
           time: "2 minutes ago",
           image: "nature-001.jpg",
+          type: "upload",
         },
         {
           id: 2,
           action: "Annotation added",
           time: "15 minutes ago",
           image: "city-042.jpg",
+          type: "annotation",
         },
         {
           id: 3,
           action: "Image annotated",
           time: "1 hour ago",
           image: "portrait-023.jpg",
+          type: "annotation",
         },
         {
           id: 4,
           action: "New collection created",
           time: "3 hours ago",
           name: "Summer 2024",
+          type: "collection",
+        },
+        {
+          id: 5,
+          action: "Gallery viewed",
+          time: "4 hours ago",
+          image: "landscape-015.jpg",
+          type: "view",
         },
       ],
     });
@@ -96,6 +107,7 @@ const DashboardPage = () => {
             action: "Image uploaded",
             time: "Just now",
             image: file.name,
+            type: "upload",
           },
           ...prev.recentActivity.slice(0, 3),
         ],
@@ -132,6 +144,50 @@ const DashboardPage = () => {
 
   const handleViewReports = () => {
     toast.info("Reports feature coming soon!");
+  };
+
+  const handleActivityClick = (activity) => {
+    // Navigate based on activity type
+    switch (activity.type || "default") {
+      case "upload":
+        toast.info(`Opening uploaded image: ${activity.image}`);
+        navigate("/gallery");
+        break;
+      case "annotation":
+        if (activity.image) {
+          toast.info(`Opening annotated image: ${activity.image}`);
+          navigate("/upload"); // Go to upload page where they can view/edit annotations
+        } else {
+          navigate("/annotations");
+        }
+        break;
+      case "collection":
+        toast.info(`Opening collection: ${activity.name}`);
+        navigate("/gallery");
+        break;
+      case "view":
+        toast.info(`Opening gallery`);
+        navigate("/gallery");
+        break;
+      default:
+        // Fallback navigation based on action text
+        if (activity.action.includes("uploaded")) {
+          toast.info(`Opening uploaded image: ${activity.image}`);
+          navigate("/gallery");
+        } else if (
+          activity.action.includes("annotation") ||
+          activity.action.includes("annotated")
+        ) {
+          toast.info(`Opening annotated image: ${activity.image}`);
+          navigate("/upload");
+        } else if (activity.action.includes("collection")) {
+          toast.info(`Opening collection: ${activity.name}`);
+          navigate("/gallery");
+        } else {
+          navigate("/gallery");
+        }
+        break;
+    }
   };
 
   const StatCard = ({
@@ -472,7 +528,10 @@ const DashboardPage = () => {
                   <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
                 </div>
               </div>
-              <button className="text-sm font-medium text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors duration-200 px-3 py-1 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20">
+              <button
+                className="text-sm font-medium text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors duration-200 px-3 py-1 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20"
+                onClick={() => navigate("/annotations")}
+              >
                 View all →
               </button>
             </div>
@@ -497,7 +556,9 @@ const DashboardPage = () => {
                 {stats?.recentActivity.map((activity, index) => (
                   <div
                     key={activity.id}
-                    className="group flex items-center space-x-4 p-3 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-all duration-200 border border-transparent hover:border-gray-200 dark:hover:border-gray-700"
+                    className="group flex items-center space-x-4 p-3 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-all duration-200 border border-transparent hover:border-gray-200 dark:hover:border-gray-700 cursor-pointer hover:shadow-md"
+                    onClick={() => handleActivityClick(activity)}
+                    title={`Click to view ${activity.image || activity.name}`}
                   >
                     <div
                       className={`w-10 h-10 rounded-xl flex items-center justify-center shadow-sm ${
@@ -575,9 +636,9 @@ const DashboardPage = () => {
                         {activity.image || activity.name}
                       </p>
                     </div>
-                    <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                    <div className="opacity-0 group-hover:opacity-100 transition-all duration-200 transform group-hover:translate-x-1">
                       <svg
-                        className="w-4 h-4 text-gray-400"
+                        className="w-5 h-5 text-blue-500"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
