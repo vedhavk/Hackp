@@ -126,26 +126,43 @@ export const mockAuth = {
   },
 };
 
-// Mock images data
-const mockImages = Array.from({ length: 20 }, (_, index) => ({
-  id: index + 1,
-  url: `https://picsum.photos/400/300?random=${index + 1}`,
-  thumbnail: `https://picsum.photos/200/150?random=${index + 1}`,
-  title: `Image ${index + 1}`,
-  annotations:
-    index % 3 === 0
-      ? [
-          {
-            id: `ann-${index}-1`,
-            x: 50,
-            y: 50,
-            width: 100,
-            height: 80,
-            label: `Annotation ${index + 1}-1`,
-          },
-        ]
-      : [],
-}));
+// Mock images data with localStorage persistence
+const getStoredAnnotations = () => {
+  const stored = localStorage.getItem("imageAnnotations");
+  return stored ? JSON.parse(stored) : {};
+};
+
+const saveAnnotationsToStorage = (annotations) => {
+  localStorage.setItem("imageAnnotations", JSON.stringify(annotations));
+};
+
+const mockImages = Array.from({ length: 20 }, (_, index) => {
+  const seed = index + 1;
+  const storedAnnotations = getStoredAnnotations();
+  const imageId = index + 1;
+
+  return {
+    id: imageId,
+    // Use deterministic Picsum URLs that will always return the same image
+    url: `https://picsum.photos/id/${100 + seed}/800/600`,
+    thumbnail: `https://picsum.photos/id/${100 + seed}/800/600`,
+    title: `Image ${index + 1}`,
+    annotations:
+      storedAnnotations[imageId] ||
+      (index % 3 === 0
+        ? [
+            {
+              id: `ann-${index}-1`,
+              x: 50,
+              y: 50,
+              width: 100,
+              height: 80,
+              label: `Annotation ${index + 1}-1`,
+            },
+          ]
+        : []),
+  };
+});
 
 // Mock gallery API
 export const mockGallery = {
@@ -154,7 +171,13 @@ export const mockGallery = {
 
     const start = (page - 1) * limit;
     const end = start + limit;
-    const images = mockImages.slice(start, end);
+    const storedAnnotations = getStoredAnnotations();
+
+    // Return images with persisted annotations
+    const images = mockImages.slice(start, end).map((image) => ({
+      ...image,
+      annotations: storedAnnotations[image.id] || image.annotations || [],
+    }));
 
     return {
       images,
@@ -168,12 +191,18 @@ export const mockGallery = {
   async getImage(id) {
     await delay(500);
 
-    const image = mockImages.find((img) => img.id === parseInt(id));
+    const storedAnnotations = getStoredAnnotations();
+    const imageId = parseInt(id);
+    const image = mockImages.find((img) => img.id === imageId);
     if (!image) {
       throw new Error("Image not found");
     }
 
-    return image;
+    // Return image with persisted annotations
+    return {
+      ...image,
+      annotations: storedAnnotations[imageId] || image.annotations || [],
+    };
   },
 };
 
@@ -187,56 +216,75 @@ export const mockAnnotations = {
       throw new Error("Image not found");
     }
 
+    // Generate a more unique ID with higher precision timestamp and longer random string
+    const timestamp = Date.now();
+    const randomString = Math.random().toString(36).substr(2, 12);
+    const uniqueId = `ann-${imageId}-${timestamp}-${randomString}`;
+
     const newAnnotation = {
       ...annotation,
-      id: `ann-${imageId}-${Date.now()}`,
+      id: uniqueId,
       createdAt: new Date().toISOString(),
     };
 
-    image.annotations.push(newAnnotation);
+    // Persist to localStorage for data persistence across refreshes
+    const storedAnnotations = getStoredAnnotations();
+    const imageIdNum = parseInt(imageId);
+    if (!storedAnnotations[imageIdNum]) {
+      storedAnnotations[imageIdNum] = [];
+    }
+    storedAnnotations[imageIdNum].push(newAnnotation);
+    saveAnnotationsToStorage(storedAnnotations);
+
     return newAnnotation;
   },
 
   async updateAnnotation(imageId, annotationId, updates) {
     await delay(600);
 
-    const image = mockImages.find((img) => img.id === parseInt(imageId));
-    if (!image) {
+    const storedAnnotations = getStoredAnnotations();
+    const imageIdNum = parseInt(imageId);
+
+    if (!storedAnnotations[imageIdNum]) {
       throw new Error("Image not found");
     }
 
-    const annotationIndex = image.annotations.findIndex(
+    const annotationIndex = storedAnnotations[imageIdNum].findIndex(
       (ann) => ann.id === annotationId
     );
     if (annotationIndex === -1) {
       throw new Error("Annotation not found");
     }
 
-    image.annotations[annotationIndex] = {
-      ...image.annotations[annotationIndex],
+    storedAnnotations[imageIdNum][annotationIndex] = {
+      ...storedAnnotations[imageIdNum][annotationIndex],
       ...updates,
       updatedAt: new Date().toISOString(),
     };
 
-    return image.annotations[annotationIndex];
+    saveAnnotationsToStorage(storedAnnotations);
+    return storedAnnotations[imageIdNum][annotationIndex];
   },
 
   async deleteAnnotation(imageId, annotationId) {
     await delay(500);
 
-    const image = mockImages.find((img) => img.id === parseInt(imageId));
-    if (!image) {
+    const storedAnnotations = getStoredAnnotations();
+    const imageIdNum = parseInt(imageId);
+
+    if (!storedAnnotations[imageIdNum]) {
       throw new Error("Image not found");
     }
 
-    const annotationIndex = image.annotations.findIndex(
+    const annotationIndex = storedAnnotations[imageIdNum].findIndex(
       (ann) => ann.id === annotationId
     );
     if (annotationIndex === -1) {
       throw new Error("Annotation not found");
     }
 
-    image.annotations.splice(annotationIndex, 1);
+    storedAnnotations[imageIdNum].splice(annotationIndex, 1);
+    saveAnnotationsToStorage(storedAnnotations);
     return { success: true };
   },
 };

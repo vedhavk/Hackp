@@ -1,4 +1,4 @@
-﻿import React, { useState, useRef, useCallback } from "react";
+﻿import React, { useState, useRef, useCallback, useEffect } from "react";
 import { Button, Modal } from "./ui";
 import useToast from "../hooks/useToast";
 import { mockAnnotations } from "../utils/mockApi";
@@ -22,6 +22,14 @@ const ImageAnnotator = ({
     error: toastError,
     info: toastInfo,
   } = useToast();
+
+  // Sync annotations when prop changes
+  useEffect(() => {
+    // Only update if annotations actually changed to prevent unnecessary re-renders
+    if (JSON.stringify(annotations) !== JSON.stringify(localAnnotations)) {
+      setLocalAnnotations(annotations);
+    }
+  }, [annotations, localAnnotations]);
 
   const getMousePosition = useCallback((e) => {
     if (!imageRef.current) return { x: 0, y: 0 };
@@ -80,7 +88,7 @@ const ImageAnnotator = ({
     setDragStart(null);
   }, [isDrawing, currentAnnotation, readOnly, toastInfo]);
 
-  const handleSaveAnnotation = async () => {
+  const handleSaveAnnotation = useCallback(async () => {
     if (!annotationLabel.trim() || !currentAnnotation) return;
 
     try {
@@ -93,8 +101,10 @@ const ImageAnnotator = ({
         image.id,
         newAnnotation
       );
+
+      // Only update the parent state, let useEffect sync it back to local state
+      // This prevents double updates and ensures single source of truth
       const updatedAnnotations = [...localAnnotations, savedAnnotation];
-      setLocalAnnotations(updatedAnnotations);
       onAnnotationsChange?.(image.id, updatedAnnotations);
 
       toastSuccess("Annotation saved successfully");
@@ -104,13 +114,36 @@ const ImageAnnotator = ({
     } catch (error) {
       toastError("Failed to save annotation");
     }
-  };
+  }, [
+    annotationLabel,
+    currentAnnotation,
+    image.id,
+    localAnnotations,
+    onAnnotationsChange,
+    toastSuccess,
+    toastError,
+  ]);
 
-  const handleCancelAnnotation = () => {
+  const handleCancelAnnotation = useCallback(() => {
     setShowLabelModal(false);
     setCurrentAnnotation(null);
     setAnnotationLabel("");
-  };
+  }, []);
+
+  const handleInputChange = useCallback((e) => {
+    setAnnotationLabel(e.target.value);
+  }, []);
+
+  const handleKeyDown = useCallback(
+    (e) => {
+      if (e.key === "Enter" && e.target.value.trim()) {
+        handleSaveAnnotation();
+      } else if (e.key === "Escape") {
+        handleCancelAnnotation();
+      }
+    },
+    [handleSaveAnnotation, handleCancelAnnotation]
+  );
 
   return (
     <div className="relative">
@@ -127,22 +160,28 @@ const ImageAnnotator = ({
           draggable={false}
         />
 
-        {localAnnotations.map((annotation) => (
-          <div
-            key={annotation.id}
-            className="absolute border-2 border-blue-500 bg-blue-500 bg-opacity-10"
-            style={{
-              left: annotation.x,
-              top: annotation.y,
-              width: annotation.width,
-              height: annotation.height,
-            }}
-          >
-            <div className="absolute -top-6 left-0 px-2 py-1 text-xs font-medium text-white rounded bg-blue-500">
-              {annotation.label}
+        {localAnnotations
+          .filter(
+            (annotation, index, self) =>
+              // Remove any duplicate annotations by ID to prevent duplicate keys
+              self.findIndex((a) => a.id === annotation.id) === index
+          )
+          .map((annotation) => (
+            <div
+              key={annotation.id}
+              className="absolute border-2 border-blue-500 bg-blue-500 bg-opacity-10"
+              style={{
+                left: annotation.x,
+                top: annotation.y,
+                width: annotation.width,
+                height: annotation.height,
+              }}
+            >
+              <div className="absolute -top-6 left-0 px-2 py-1 text-xs font-medium text-white rounded bg-blue-500">
+                {annotation.label}
+              </div>
             </div>
-          </div>
-        ))}
+          ))}
 
         {currentAnnotation && isDrawing && (
           <div
@@ -180,19 +219,14 @@ const ImageAnnotator = ({
               Annotation Label
             </label>
             <input
+              key="annotation-label-input"
               type="text"
               value={annotationLabel}
-              onChange={(e) => setAnnotationLabel(e.target.value)}
+              onChange={handleInputChange}
               placeholder="Enter a description for this annotation"
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
               autoFocus
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && annotationLabel.trim()) {
-                  handleSaveAnnotation();
-                } else if (e.key === "Escape") {
-                  handleCancelAnnotation();
-                }
-              }}
+              onKeyDown={handleKeyDown}
             />
           </div>
 

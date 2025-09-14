@@ -315,8 +315,8 @@ const AnnotationsPage = () => {
                 <ImageAnnotator
                   image={selectedImage}
                   annotations={selectedImage.annotations || []}
-                  onAnnotationsChange={(newAnnotations) => {
-                    handleAnnotationsChange(selectedImage.id, newAnnotations);
+                  onAnnotationsChange={(imageId, newAnnotations) => {
+                    handleAnnotationsChange(imageId, newAnnotations);
                     setSelectedImage((prev) => ({
                       ...prev,
                       annotations: newAnnotations,
