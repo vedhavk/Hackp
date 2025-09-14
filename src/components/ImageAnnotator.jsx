@@ -3,7 +3,12 @@ import { Button, Modal } from "./ui";
 import useToast from "../hooks/useToast";
 import { mockAnnotations } from "../utils/mockApi";
 
-const ImageAnnotator = ({ image, annotations = [], onAnnotationsChange, readOnly = false }) => {
+const ImageAnnotator = ({
+  image,
+  annotations = [],
+  onAnnotationsChange,
+  readOnly = false,
+}) => {
   const [localAnnotations, setLocalAnnotations] = useState(annotations);
   const [isDrawing, setIsDrawing] = useState(false);
   const [currentAnnotation, setCurrentAnnotation] = useState(null);
@@ -12,7 +17,11 @@ const ImageAnnotator = ({ image, annotations = [], onAnnotationsChange, readOnly
   const [dragStart, setDragStart] = useState(null);
 
   const imageRef = useRef(null);
-  const { success: toastSuccess, error: toastError, info: toastInfo } = useToast();
+  const {
+    success: toastSuccess,
+    error: toastError,
+    info: toastInfo,
+  } = useToast();
 
   const getMousePosition = useCallback((e) => {
     if (!imageRef.current) return { x: 0, y: 0 };
@@ -23,32 +32,38 @@ const ImageAnnotator = ({ image, annotations = [], onAnnotationsChange, readOnly
     };
   }, []);
 
-  const handleMouseDown = useCallback((e) => {
-    if (readOnly) return;
-    e.preventDefault();
-    
-    const position = getMousePosition(e);
-    setIsDrawing(true);
-    setDragStart(position);
-    setCurrentAnnotation({
-      x: position.x,
-      y: position.y,
-      width: 0,
-      height: 0,
-    });
-  }, [readOnly, getMousePosition]);
+  const handleMouseDown = useCallback(
+    (e) => {
+      if (readOnly) return;
+      e.preventDefault();
 
-  const handleMouseMove = useCallback((e) => {
-    if (!isDrawing || !dragStart || readOnly) return;
+      const position = getMousePosition(e);
+      setIsDrawing(true);
+      setDragStart(position);
+      setCurrentAnnotation({
+        x: position.x,
+        y: position.y,
+        width: 0,
+        height: 0,
+      });
+    },
+    [readOnly, getMousePosition]
+  );
 
-    const position = getMousePosition(e);
-    const width = Math.abs(position.x - dragStart.x);
-    const height = Math.abs(position.y - dragStart.y);
-    const x = Math.min(position.x, dragStart.x);
-    const y = Math.min(position.y, dragStart.y);
+  const handleMouseMove = useCallback(
+    (e) => {
+      if (!isDrawing || !dragStart || readOnly) return;
 
-    setCurrentAnnotation({ x, y, width, height });
-  }, [isDrawing, dragStart, readOnly, getMousePosition]);
+      const position = getMousePosition(e);
+      const width = Math.abs(position.x - dragStart.x);
+      const height = Math.abs(position.y - dragStart.y);
+      const x = Math.min(position.x, dragStart.x);
+      const y = Math.min(position.y, dragStart.y);
+
+      setCurrentAnnotation({ x, y, width, height });
+    },
+    [isDrawing, dragStart, readOnly, getMousePosition]
+  );
 
   const handleMouseUp = useCallback(() => {
     if (!isDrawing || !currentAnnotation || readOnly) return;
@@ -74,7 +89,10 @@ const ImageAnnotator = ({ image, annotations = [], onAnnotationsChange, readOnly
         label: annotationLabel.trim(),
       };
 
-      const savedAnnotation = await mockAnnotations.saveAnnotation(image.id, newAnnotation);
+      const savedAnnotation = await mockAnnotations.saveAnnotation(
+        image.id,
+        newAnnotation
+      );
       const updatedAnnotations = [...localAnnotations, savedAnnotation];
       setLocalAnnotations(updatedAnnotations);
       onAnnotationsChange?.(image.id, updatedAnnotations);
@@ -142,7 +160,9 @@ const ImageAnnotator = ({ image, annotations = [], onAnnotationsChange, readOnly
           <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 text-white text-center p-4 pointer-events-none">
             <div>
               <h3 className="text-lg font-medium mb-2">Start Annotating</h3>
-              <p className="text-sm">Click and drag to create rectangular annotations</p>
+              <p className="text-sm">
+                Click and drag to create rectangular annotations
+              </p>
             </div>
           </div>
         )}
@@ -167,9 +187,9 @@ const ImageAnnotator = ({ image, annotations = [], onAnnotationsChange, readOnly
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
               autoFocus
               onKeyDown={(e) => {
-                if (e.key === 'Enter' && annotationLabel.trim()) {
+                if (e.key === "Enter" && annotationLabel.trim()) {
                   handleSaveAnnotation();
-                } else if (e.key === 'Escape') {
+                } else if (e.key === "Escape") {
                   handleCancelAnnotation();
                 }
               }}
@@ -180,7 +200,10 @@ const ImageAnnotator = ({ image, annotations = [], onAnnotationsChange, readOnly
             <Button variant="ghost" onClick={handleCancelAnnotation}>
               Cancel
             </Button>
-            <Button onClick={handleSaveAnnotation} disabled={!annotationLabel.trim()}>
+            <Button
+              onClick={handleSaveAnnotation}
+              disabled={!annotationLabel.trim()}
+            >
               Save Annotation
             </Button>
           </div>
