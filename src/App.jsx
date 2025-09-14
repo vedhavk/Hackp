@@ -19,6 +19,7 @@ import AnnotationsPage from "./pages/AnnotationsPage";
 import UploadAndAnnotatePage from "./pages/UploadAndAnnotatePage";
 import ProfilePage from "./pages/ProfilePage";
 import SettingsPage from "./pages/SettingsPage";
+import AnalyticsPage from "./pages/AnalyticsPage";
 
 // Toast Display Component
 const ToastDisplay = () => {
@@ -90,6 +91,15 @@ const App = () => {
                     element={
                       <ProtectedRoute>
                         <SettingsPage />
+                      </ProtectedRoute>
+                    }
+                  />
+
+                  <Route
+                    path="/analytics"
+                    element={
+                      <ProtectedRoute>
+                        <AnalyticsPage />
                       </ProtectedRoute>
                     }
                   />

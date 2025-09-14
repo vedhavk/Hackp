@@ -143,7 +143,8 @@ const DashboardPage = () => {
   };
 
   const handleViewReports = () => {
-    toast.info("Reports feature coming soon!");
+    toast.info("Opening analytics dashboard...");
+    navigate("/analytics");
   };
 
   const handleActivityClick = (activity) => {
