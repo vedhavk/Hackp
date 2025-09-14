@@ -93,7 +93,7 @@ const App = () => {
                     }
                   />
                 </Routes>
-                
+
                 {/* Toast Display */}
                 <ToastDisplay />
               </div>

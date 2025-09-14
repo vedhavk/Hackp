@@ -100,13 +100,16 @@ const DashboardLayout = ({ children }) => {
 
       {/* Sidebar */}
       <div
-        className={`fixed inset-y-0 left-0 z-50 bg-gradient-to-b from-slate-50 to-white dark:from-gray-900 dark:to-gray-800 backdrop-blur-lg border-r border-gray-200/60 dark:border-gray-700/60 shadow-xl transform transition-all duration-300 ease-in-out lg:relative lg:transform-none ${
+        className={`fixed inset-y-0 left-0 z-50 bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl border-r border-gray-200/50 dark:border-gray-700/50 shadow-2xl transform transition-all duration-300 ease-in-out lg:relative lg:transform-none ${
           sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
         } ${sidebarCollapsed ? "w-16" : "w-72"}`}
       >
+        {/* Gradient overlay */}
+        <div className="absolute inset-0 bg-gradient-to-br from-blue-50/50 via-transparent to-purple-50/50 dark:from-blue-900/10 dark:via-transparent dark:to-purple-900/10 pointer-events-none"></div>
+
         {/* Header */}
         <div
-          className={`flex items-center justify-between h-20 px-3 border-b border-gray-200/60 dark:border-gray-700/60 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm ${
+          className={`relative flex items-center justify-between h-20 px-3 border-b border-gray-200/50 dark:border-gray-700/50 bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm ${
             sidebarCollapsed ? "px-2" : "px-6"
           }`}
         >
@@ -114,7 +117,7 @@ const DashboardLayout = ({ children }) => {
             {/* Hamburger/Collapse Toggle */}
             <button
               onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-              className="hidden lg:flex p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-all duration-200 group"
+              className="hidden lg:flex p-2.5 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300 hover:bg-gray-100/80 dark:hover:bg-gray-700/80 rounded-xl transition-all duration-200 group backdrop-blur-sm"
             >
               <div className="space-y-1">
                 <div
@@ -138,29 +141,70 @@ const DashboardLayout = ({ children }) => {
             {!sidebarCollapsed && (
               <>
                 <div className="relative">
-                  <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 rounded-xl flex items-center justify-center shadow-lg transform rotate-3 hover:rotate-0 transition-transform duration-300">
+                  <div className="w-12 h-12 bg-gradient-to-br from-blue-600 via-purple-600 to-indigo-700 rounded-2xl flex items-center justify-center shadow-lg transform hover:scale-105 transition-all duration-300 relative overflow-hidden">
+                    {/* Shine effect */}
+                    <div className="absolute inset-0 bg-gradient-to-tr from-white/20 via-transparent to-transparent"></div>
                     <svg
-                      className="w-6 h-6 text-white"
+                      className="w-7 h-7 text-white relative z-10"
+                      viewBox="0 0 100 100"
                       fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
                     >
+                      {/* Photo frame */}
+                      <rect
+                        x="25"
+                        y="30"
+                        width="50"
+                        height="35"
+                        rx="3"
+                        stroke="currentColor"
+                        strokeWidth="3"
+                        fill="none"
+                      />
+                      {/* Annotation tag */}
+                      <circle cx="40" cy="42" r="3" fill="currentColor" />
+                      <rect
+                        x="46"
+                        y="40"
+                        width="12"
+                        height="4"
+                        rx="1"
+                        fill="currentColor"
+                      />
+                      {/* Focus indicators */}
                       <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2.5}
-                        d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                        d="M30 35 L35 35 L35 40"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        fill="none"
+                      />
+                      <path
+                        d="M70 35 L65 35 L65 40"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        fill="none"
+                      />
+                      <path
+                        d="M30 60 L35 60 L35 55"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        fill="none"
+                      />
+                      <path
+                        d="M70 60 L65 60 L65 55"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        fill="none"
                       />
                     </svg>
                   </div>
-                  <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-400 rounded-full border-2 border-white dark:border-gray-800 animate-pulse"></div>
+                  <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-400 rounded-full border-2 border-white dark:border-gray-900 animate-pulse shadow-sm"></div>
                 </div>
                 <div>
                   <h1 className="text-lg font-bold bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-300 bg-clip-text text-transparent">
-                    PhotoApp
+                    PhotoAnnotator
                   </h1>
                   <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">
-                    Premium Studio
+                    Professional Studio
                   </p>
                 </div>
               </>
@@ -348,12 +392,12 @@ const DashboardLayout = ({ children }) => {
       {/* Main content */}
       <div className="flex-1 flex flex-col min-h-screen">
         {/* Top header */}
-        <header className="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
-          <div className="flex items-center justify-between h-16 px-4 sm:px-6 lg:px-8">
-            <div className="flex items-center">
+        <header className="bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm shadow-sm border-b border-gray-200/50 dark:border-gray-700/50 sticky top-0 z-40">
+          <div className="flex items-center justify-between h-18 px-4 sm:px-6 lg:px-8">
+            <div className="flex items-center space-x-4">
               <button
                 onClick={() => setSidebarOpen(true)}
-                className="lg:hidden p-1 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
+                className="lg:hidden p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-all duration-200"
               >
                 <svg
                   className="w-6 h-6"
@@ -369,26 +413,99 @@ const DashboardLayout = ({ children }) => {
                   />
                 </svg>
               </button>
-              <h1 className="ml-2 lg:ml-0 text-xl font-semibold text-gray-900 dark:text-white">
-                {getPageTitle()}
-              </h1>
+
+              {/* Page title with breadcrumb */}
+              <div className="flex flex-col">
+                <h1 className="text-xl font-bold text-gray-900 dark:text-white tracking-tight">
+                  {getPageTitle()}
+                </h1>
+                <div className="flex items-center text-sm text-gray-500 dark:text-gray-400 mt-0.5">
+                  <span>PhotoAnnotator</span>
+                  <svg
+                    className="w-3 h-3 mx-2"
+                    fill="currentColor"
+                    viewBox="0 0 8 8"
+                  >
+                    <path d="M2.5 0L1 1.5 3.5 4 1 6.5 2.5 8 6 4.5z" />
+                  </svg>
+                  <span className="text-gray-700 dark:text-gray-300 font-medium">
+                    {getPageTitle()}
+                  </span>
+                </div>
+              </div>
             </div>
 
-            <div className="flex items-center space-x-3">
+            <div className="flex items-center space-x-4">
+              {/* Search button */}
+              <button className="p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-all duration-200">
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                  />
+                </svg>
+              </button>
+
+              {/* Notifications */}
+              <button className="relative p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-all duration-200">
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M15 17h5l-5 5h5m-5-5V8a3 3 0 10-6 0v9"
+                  />
+                </svg>
+                <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full border-2 border-white dark:border-gray-900"></div>
+              </button>
+
               {/* Theme toggle */}
               <ThemeToggle className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300" />
 
-              {/* User menu button */}
-              <div className="hidden sm:block">
-                <div className="flex items-center">
-                  <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
-                    <span className="text-white text-sm font-medium">
-                      {user?.name?.charAt(0) || "U"}
-                    </span>
+              {/* User profile dropdown */}
+              <div className="relative">
+                <div className="flex items-center space-x-3 p-2 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-lg transition-all duration-200 cursor-pointer">
+                  <div className="relative">
+                    <div className="w-9 h-9 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center shadow-sm">
+                      <span className="text-white text-sm font-semibold">
+                        {user?.name?.charAt(0) || "U"}
+                      </span>
+                    </div>
+                    <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-400 rounded-full border-2 border-white dark:border-gray-900"></div>
                   </div>
-                  <span className="ml-2 text-sm font-medium text-gray-700 dark:text-gray-300">
-                    {user?.name || "User"}
-                  </span>
+                  <div className="hidden sm:block">
+                    <p className="text-sm font-semibold text-gray-900 dark:text-white">
+                      {user?.name || "User"}
+                    </p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                      Premium Plan
+                    </p>
+                  </div>
+                  <svg
+                    className="hidden sm:block w-4 h-4 text-gray-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M19 9l-7 7-7-7"
+                    />
+                  </svg>
                 </div>
               </div>
             </div>
