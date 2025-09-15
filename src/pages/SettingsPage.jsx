@@ -1,9 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { useTheme } from "../contexts/ThemeContext";
+import { useToast } from "../contexts/ToastContext";
 import DashboardLayout from "../components/DashboardLayout";
+import { Modal, Button } from "../components/ui";
 
 const SettingsPage = () => {
   const { theme, toggleTheme } = useTheme();
+  const { success: toastSuccess, error: toastError } = useToast();
   const [notifications, setNotifications] = useState({
     email: true,
     push: false,
@@ -31,12 +34,94 @@ const SettingsPage = () => {
 
   const [savedMessage, setSavedMessage] = useState("");
 
+  // Modal states
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showDeactivateModal, setShowDeactivateModal] = useState(false);
+
+  // Password change state
+  const [passwordData, setPasswordData] = useState({
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: "",
+  });
+
   useEffect(() => {
     if (savedMessage) {
       const timer = setTimeout(() => setSavedMessage(""), 3000);
       return () => clearTimeout(timer);
     }
   }, [savedMessage]);
+
+  // Account Management Functions
+  const handleExportData = () => {
+    toastSuccess("Data export started. You'll receive an email when ready.");
+    // In a real app, this would trigger a backend export process
+    console.log("Exporting user data...");
+  };
+
+  const handleChangePassword = () => {
+    setShowPasswordModal(true);
+  };
+
+  const handlePasswordSubmit = () => {
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      toastError("New passwords don't match!");
+      return;
+    }
+    if (passwordData.newPassword.length < 8) {
+      toastError("Password must be at least 8 characters long!");
+      return;
+    }
+    // In a real app, this would call an API
+    toastSuccess("Password changed successfully!");
+    setShowPasswordModal(false);
+    setPasswordData({
+      currentPassword: "",
+      newPassword: "",
+      confirmPassword: "",
+    });
+  };
+
+  const handleDeactivateAccount = () => {
+    setShowDeactivateModal(true);
+  };
+
+  const handleDeactivateConfirm = () => {
+    toastSuccess(
+      "Account deactivated. You can reactivate anytime by logging in."
+    );
+    setShowDeactivateModal(false);
+    // In a real app, this would call an API and redirect to login
+  };
+
+  const handleDeleteAccount = () => {
+    setShowDeleteModal(true);
+  };
+
+  const handleDeleteConfirm = () => {
+    toastSuccess("Account deletion process initiated. This cannot be undone.");
+    setShowDeleteModal(false);
+    // In a real app, this would call an API and redirect to home page
+  };
+
+  // Help & Support Functions
+  const handleHelpCenter = () => {
+    window.open("https://help.example.com", "_blank");
+    toastSuccess("Opening Help Center in new tab");
+  };
+
+  const handleContactSupport = () => {
+    const subject = encodeURIComponent("Support Request");
+    const body = encodeURIComponent("Please describe your issue here...");
+    window.location.href = `mailto:support@example.com?subject=${subject}&body=${body}`;
+    toastSuccess("Opening email client to contact support");
+  };
+
+  const handleDocumentation = () => {
+    window.open("https://docs.example.com", "_blank");
+    toastSuccess("Opening Documentation in new tab");
+  };
 
   const handleNotificationChange = (key) => {
     setNotifications((prev) => ({
@@ -573,17 +658,34 @@ const SettingsPage = () => {
                   </h3>
                   <div className="space-y-4">
                     {[
-                      { icon: "📥", text: "Export My Data", color: "blue" },
-                      { icon: "🔑", text: "Change Password", color: "blue" },
+                      {
+                        icon: "📥",
+                        text: "Export My Data",
+                        color: "blue",
+                        action: handleExportData,
+                      },
+                      {
+                        icon: "🔑",
+                        text: "Change Password",
+                        color: "blue",
+                        action: handleChangePassword,
+                      },
                       {
                         icon: "⏸️",
                         text: "Deactivate Account",
                         color: "orange",
+                        action: handleDeactivateAccount,
                       },
-                      { icon: "🗑️", text: "Delete Account", color: "red" },
+                      {
+                        icon: "🗑️",
+                        text: "Delete Account",
+                        color: "red",
+                        action: handleDeleteAccount,
+                      },
                     ].map((action, index) => (
                       <button
                         key={index}
+                        onClick={action.action}
                         className={`w-full group/account p-4 bg-gradient-to-r from-gray-50/50 to-gray-100/30 dark:from-gray-700/30 dark:to-gray-600/20 rounded-xl border border-gray-200/50 dark:border-gray-600/50 transition-all duration-300 hover:scale-105 hover:shadow-lg backdrop-blur-sm ${
                           action.color === "red"
                             ? "hover:from-red-50 hover:to-red-100 dark:hover:from-red-900/20 dark:hover:to-red-800/20"
@@ -621,12 +723,25 @@ const SettingsPage = () => {
                   </h3>
                   <div className="space-y-4">
                     {[
-                      { icon: "❓", text: "Help Center" },
-                      { icon: "✉️", text: "Contact Support" },
-                      { icon: "📚", text: "Documentation" },
+                      {
+                        icon: "❓",
+                        text: "Help Center",
+                        action: handleHelpCenter,
+                      },
+                      {
+                        icon: "✉️",
+                        text: "Contact Support",
+                        action: handleContactSupport,
+                      },
+                      {
+                        icon: "📚",
+                        text: "Documentation",
+                        action: handleDocumentation,
+                      },
                     ].map((help, index) => (
                       <button
                         key={index}
+                        onClick={help.action}
                         className="w-full group/help p-4 bg-gradient-to-r from-gray-50/50 to-gray-100/30 dark:from-gray-700/30 dark:to-gray-600/20 rounded-xl border border-gray-200/50 dark:border-gray-600/50 transition-all duration-300 hover:scale-105 hover:shadow-lg backdrop-blur-sm"
                       >
                         <div className="flex items-center space-x-4">
@@ -643,6 +758,182 @@ const SettingsPage = () => {
             </div>
           </div>
         </div>
+
+        {/* Password Change Modal */}
+        <Modal
+          isOpen={showPasswordModal}
+          onClose={() => setShowPasswordModal(false)}
+          title="Change Password"
+          size="md"
+        >
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Current Password
+              </label>
+              <input
+                type="password"
+                value={passwordData.currentPassword}
+                onChange={(e) =>
+                  setPasswordData({
+                    ...passwordData,
+                    currentPassword: e.target.value,
+                  })
+                }
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                placeholder="Enter current password"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                New Password
+              </label>
+              <input
+                type="password"
+                value={passwordData.newPassword}
+                onChange={(e) =>
+                  setPasswordData({
+                    ...passwordData,
+                    newPassword: e.target.value,
+                  })
+                }
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                placeholder="Enter new password"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Confirm New Password
+              </label>
+              <input
+                type="password"
+                value={passwordData.confirmPassword}
+                onChange={(e) =>
+                  setPasswordData({
+                    ...passwordData,
+                    confirmPassword: e.target.value,
+                  })
+                }
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                placeholder="Confirm new password"
+              />
+            </div>
+            <div className="flex space-x-3 pt-4">
+              <Button
+                variant="outline"
+                onClick={() => setShowPasswordModal(false)}
+                className="flex-1"
+              >
+                Cancel
+              </Button>
+              <Button onClick={handlePasswordSubmit} className="flex-1">
+                Change Password
+              </Button>
+            </div>
+          </div>
+        </Modal>
+
+        {/* Account Deletion Modal */}
+        <Modal
+          isOpen={showDeleteModal}
+          onClose={() => setShowDeleteModal(false)}
+          title="Delete Account"
+          size="md"
+        >
+          <div className="space-y-4">
+            <div className="text-center">
+              <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 dark:bg-red-900/20 mb-4">
+                <svg
+                  className="h-6 w-6 text-red-600 dark:text-red-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
+                  />
+                </svg>
+              </div>
+              <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+                Are you absolutely sure?
+              </h3>
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                This action cannot be undone. This will permanently delete your
+                account and remove all your data from our servers.
+              </p>
+            </div>
+            <div className="flex space-x-3 pt-4">
+              <Button
+                variant="outline"
+                onClick={() => setShowDeleteModal(false)}
+                className="flex-1"
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="danger"
+                onClick={handleDeleteConfirm}
+                className="flex-1"
+              >
+                Yes, Delete Account
+              </Button>
+            </div>
+          </div>
+        </Modal>
+
+        {/* Account Deactivation Modal */}
+        <Modal
+          isOpen={showDeactivateModal}
+          onClose={() => setShowDeactivateModal(false)}
+          title="Deactivate Account"
+          size="md"
+        >
+          <div className="space-y-4">
+            <div className="text-center">
+              <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-orange-100 dark:bg-orange-900/20 mb-4">
+                <svg
+                  className="h-6 w-6 text-orange-600 dark:text-orange-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+              </div>
+              <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+                Deactivate Your Account?
+              </h3>
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                Your account will be temporarily deactivated. You can reactivate
+                it anytime by logging in again. Your data will be preserved.
+              </p>
+            </div>
+            <div className="flex space-x-3 pt-4">
+              <Button
+                variant="outline"
+                onClick={() => setShowDeactivateModal(false)}
+                className="flex-1"
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="secondary"
+                onClick={handleDeactivateConfirm}
+                className="flex-1"
+              >
+                Deactivate Account
+              </Button>
+            </div>
+          </div>
+        </Modal>
       </div>
     </DashboardLayout>
   );
