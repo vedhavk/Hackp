@@ -199,12 +199,36 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-gray-900 dark:via-slate-900 dark:to-gray-800 p-4 relative overflow-hidden">
-      {/* Background decorative elements */}
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-800 dark:from-gray-900 dark:via-slate-900 dark:to-black p-4 relative overflow-hidden">
+      {/* Animated Background Pattern */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-blue-400/10 rounded-full blur-3xl"></div>
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-purple-400/10 rounded-full blur-3xl"></div>
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-indigo-400/5 rounded-full blur-3xl"></div>
+        {/* Floating Geometric Shapes */}
+        <div className="absolute top-10 left-10 w-20 h-20 bg-gradient-to-r from-cyan-400/20 to-blue-500/20 rounded-lg rotate-45 animate-pulse"></div>
+        <div className="absolute top-32 right-20 w-16 h-16 bg-gradient-to-r from-purple-400/20 to-pink-500/20 rounded-full animate-bounce"></div>
+        <div className="absolute bottom-20 left-1/4 w-12 h-12 bg-gradient-to-r from-green-400/20 to-emerald-500/20 rounded-lg rotate-12 animate-pulse delay-1000"></div>
+        <div className="absolute bottom-40 right-1/3 w-8 h-8 bg-gradient-to-r from-yellow-400/20 to-orange-500/20 rounded-full animate-bounce delay-500"></div>
+
+        {/* Large Background Blobs */}
+        <div className="absolute -top-40 -right-40 w-96 h-96 bg-gradient-to-br from-blue-400/10 to-cyan-500/10 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-gradient-to-br from-purple-400/10 to-pink-500/10 rounded-full blur-3xl animate-pulse delay-2000"></div>
+        <div className="absolute top-1/3 left-1/4 w-72 h-72 bg-gradient-to-br from-indigo-400/5 to-purple-500/5 rounded-full blur-3xl animate-pulse delay-1000"></div>
+
+        {/* Grid Pattern */}
+        <div className="absolute inset-0 opacity-20">
+          <div className="grid grid-cols-12 gap-4 h-full">
+            {Array.from({ length: 144 }).map((_, i) => (
+              <div
+                key={i}
+                className="w-1 h-1 bg-white/10 rounded-full animate-pulse"
+                style={{ animationDelay: `${i * 0.1}s` }}
+              ></div>
+            ))}
+          </div>
+        </div>
+
+        {/* Animated Lines */}
+        <div className="absolute top-0 left-1/4 w-px h-full bg-gradient-to-b from-transparent via-cyan-400/20 to-transparent animate-pulse"></div>
+        <div className="absolute top-0 right-1/3 w-px h-full bg-gradient-to-b from-transparent via-purple-400/20 to-transparent animate-pulse delay-1000"></div>
       </div>
 
       <div className="w-full max-w-md relative z-10">

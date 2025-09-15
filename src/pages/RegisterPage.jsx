@@ -98,13 +98,48 @@ const RegisterPage = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 p-4">
-      <div className="w-full max-w-md">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-emerald-900 via-teal-900 to-cyan-800 dark:from-gray-900 dark:via-slate-900 dark:to-black p-4 relative overflow-hidden">
+      {/* Animated Background Pattern */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        {/* Floating Geometric Shapes */}
+        <div className="absolute top-16 right-16 w-24 h-24 bg-gradient-to-r from-emerald-400/20 to-teal-500/20 rounded-xl rotate-12 animate-pulse"></div>
+        <div className="absolute top-1/4 left-12 w-18 h-18 bg-gradient-to-r from-cyan-400/20 to-blue-500/20 rounded-full animate-bounce delay-300"></div>
+        <div className="absolute bottom-32 right-1/4 w-14 h-14 bg-gradient-to-r from-teal-400/20 to-green-500/20 rounded-lg rotate-45 animate-pulse delay-700"></div>
+        <div className="absolute bottom-16 left-1/3 w-10 h-10 bg-gradient-to-r from-cyan-400/20 to-emerald-500/20 rounded-full animate-bounce delay-1200"></div>
+
+        {/* Large Background Blobs */}
+        <div className="absolute -top-48 -left-48 w-96 h-96 bg-gradient-to-br from-emerald-400/8 to-teal-500/8 rounded-full blur-3xl animate-pulse delay-500"></div>
+        <div className="absolute -bottom-32 -right-32 w-80 h-80 bg-gradient-to-br from-cyan-400/8 to-blue-500/8 rounded-full blur-3xl animate-pulse delay-1500"></div>
+        <div className="absolute top-1/2 right-1/4 w-72 h-72 bg-gradient-to-br from-teal-400/5 to-emerald-500/5 rounded-full blur-3xl animate-pulse delay-800"></div>
+
+        {/* Hexagonal Pattern */}
+        <div className="absolute inset-0 opacity-10">
+          <div className="grid grid-cols-8 gap-6 h-full justify-items-center items-center">
+            {Array.from({ length: 64 }).map((_, i) => (
+              <div
+                key={i}
+                className="w-2 h-2 bg-gradient-to-r from-emerald-300/30 to-cyan-300/30 transform rotate-45 animate-pulse"
+                style={{ animationDelay: `${i * 0.15}s` }}
+              ></div>
+            ))}
+          </div>
+        </div>
+
+        {/* Animated Lines */}
+        <div className="absolute top-0 left-1/3 w-px h-full bg-gradient-to-b from-transparent via-emerald-400/20 to-transparent animate-pulse delay-200"></div>
+        <div className="absolute top-0 right-1/4 w-px h-full bg-gradient-to-b from-transparent via-cyan-400/20 to-transparent animate-pulse delay-900"></div>
+
+        {/* Floating Particles */}
+        <div className="absolute top-1/4 left-1/2 w-1 h-1 bg-emerald-400/40 rounded-full animate-ping"></div>
+        <div className="absolute top-2/3 left-1/4 w-1 h-1 bg-cyan-400/40 rounded-full animate-ping delay-500"></div>
+        <div className="absolute top-1/3 right-1/3 w-1 h-1 bg-teal-400/40 rounded-full animate-ping delay-1000"></div>
+      </div>
+      <div className="w-full max-w-md relative z-10">
         {/* Theme Toggle */}
-        <div className="flex justify-end mb-6">
+        <div className="flex justify-end mb-8">
           <button
             onClick={toggleTheme}
-            className="p-2 rounded-lg bg-white dark:bg-gray-800 shadow-md hover:shadow-lg transition-all duration-200 text-gray-700 dark:text-gray-300"
+            className="p-3 rounded-xl bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm shadow-lg hover:shadow-xl transition-all duration-300 text-gray-700 dark:text-gray-300 hover:scale-105 border border-white/20 dark:border-gray-700/50"
             aria-label={`Switch to ${isDark ? "light" : "dark"} theme`}
           >
             {isDark ? (
@@ -139,10 +174,10 @@ const RegisterPage = () => {
           </button>
         </div>
 
-        <Card className="animate-fade-in-up">
+        <Card className="backdrop-blur-sm bg-white/95 dark:bg-gray-800/95 border border-white/20 dark:border-gray-700/50 shadow-2xl animate-fade-in-up">
           {/* Header */}
           <div className="text-center mb-8">
-            <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+            <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-emerald-500 to-cyan-600 rounded-full flex items-center justify-center shadow-lg">
               <svg
                 className="w-8 h-8 text-white"
                 fill="none"
