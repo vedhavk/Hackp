@@ -364,6 +364,13 @@ export const mockUploadedImages = {
     uploadedImages.push(imageData);
     saveUploadedImagesToStorage(uploadedImages);
 
+    // Dispatch custom event to notify gallery to refresh
+    window.dispatchEvent(
+      new CustomEvent("imageUploaded", {
+        detail: { image: imageData },
+      })
+    );
+
     return { success: true, image: imageData };
   },
 

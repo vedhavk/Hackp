@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
+import { useLocation } from "react-router-dom";
 import { mockGallery } from "../utils/mockApi";
 import { useToast } from "../contexts/ToastContext";
 import DashboardLayout from "../components/DashboardLayout";
@@ -7,6 +8,7 @@ import ImageModal from "../components/ImageModal";
 import { Card, Button, Skeleton, Spinner } from "../components/ui";
 
 const GalleryPage = () => {
+  const location = useLocation();
   const [images, setImages] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -49,6 +51,35 @@ const GalleryPage = () => {
 
   useEffect(() => {
     loadImages(1);
+  }, [loadImages]);
+
+  // Reload images when filterBy changes
+  useEffect(() => {
+    loadImages(1);
+  }, [filterBy, loadImages]);
+
+  // Add a listener for storage changes to detect when images are uploaded
+  useEffect(() => {
+    const handleStorageChange = (e) => {
+      if (e.key === "uploadedImages") {
+        // New image was uploaded, reload the gallery
+        loadImages(1);
+      }
+    };
+
+    window.addEventListener("storage", handleStorageChange);
+
+    // Also listen for custom events from same window (same-tab uploads)
+    const handleImageUploaded = (e) => {
+      loadImages(1);
+    };
+
+    window.addEventListener("imageUploaded", handleImageUploaded);
+
+    return () => {
+      window.removeEventListener("storage", handleStorageChange);
+      window.removeEventListener("imageUploaded", handleImageUploaded);
+    };
   }, [loadImages]);
 
   // Filter and sort images
@@ -215,171 +246,236 @@ const GalleryPage = () => {
 
   return (
     <DashboardLayout>
-      <div className="p-6 space-y-6">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-              Photo Gallery
-            </h1>
-            <p className="text-gray-600 dark:text-gray-400 mt-1">
-              {loading
-                ? "Loading..."
-                : `${filteredAndSortedImages.length} images`}
-            </p>
-          </div>
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-blue-50/30 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+        <div className="p-6 space-y-8">
+          {/* Enhanced Header */}
+          <div className="relative overflow-hidden rounded-3xl bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl shadow-xl shadow-gray-200/20 dark:shadow-gray-900/40 border border-white/20 dark:border-gray-700/50">
+            <div className="absolute inset-0 bg-gradient-to-r from-blue-600/5 via-purple-600/5 to-pink-600/5"></div>
+            <div className="relative p-8">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
+                <div>
+                  <h1 className="text-4xl font-bold bg-gradient-to-r from-gray-900 via-blue-800 to-purple-800 dark:from-white dark:via-blue-200 dark:to-purple-200 bg-clip-text text-transparent">
+                    Photo Gallery
+                  </h1>
+                  <p className="text-lg text-gray-600 dark:text-gray-400 mt-2 font-light">
+                    {loading
+                      ? "Loading your collection..."
+                      : `Discover and manage your ${filteredAndSortedImages.length} images`}
+                  </p>
+                </div>
 
-          <div className="flex items-center space-x-3">
-            {/* Filter dropdown */}
-            <select
-              value={filterBy}
-              onChange={(e) => setFilterBy(e.target.value)}
-              className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="all">All Images</option>
-              <option value="uploaded">Uploaded Only</option>
-              <option value="mock">Gallery Only</option>
-            </select>
+                <div className="flex items-center space-x-4">
+                  {/* Enhanced Filter dropdown */}
+                  <div className="relative">
+                    <select
+                      value={filterBy}
+                      onChange={(e) => setFilterBy(e.target.value)}
+                      className="appearance-none px-4 py-3 pr-10 border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white/80 dark:bg-gray-700/80 backdrop-blur-sm text-gray-900 dark:text-white focus:outline-none focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300 font-medium shadow-lg hover:shadow-xl"
+                    >
+                      <option value="all">All Images</option>
+                      <option value="uploaded">Uploaded Only</option>
+                      <option value="mock">Gallery Only</option>
+                    </select>
+                    <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                      <svg
+                        className="w-5 h-5 text-gray-400"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M19 9l-7 7-7-7"
+                        />
+                      </svg>
+                    </div>
+                  </div>
 
-            {/* Sort dropdown */}
-            <select
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value)}
-              className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="newest">Newest First</option>
-              <option value="oldest">Oldest First</option>
-              <option value="name">Name</option>
-              <option value="annotated">Most Annotated</option>
-            </select>
+                  {/* Enhanced Sort dropdown */}
+                  <div className="relative">
+                    <select
+                      value={sortBy}
+                      onChange={(e) => setSortBy(e.target.value)}
+                      className="appearance-none px-4 py-3 pr-10 border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white/80 dark:bg-gray-700/80 backdrop-blur-sm text-gray-900 dark:text-white focus:outline-none focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300 font-medium shadow-lg hover:shadow-xl"
+                    >
+                      <option value="newest">Newest First</option>
+                      <option value="oldest">Oldest First</option>
+                      <option value="name">Name</option>
+                      <option value="annotated">Most Annotated</option>
+                    </select>
+                    <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                      <svg
+                        className="w-5 h-5 text-gray-400"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M19 9l-7 7-7-7"
+                        />
+                      </svg>
+                    </div>
+                  </div>
 
-            {/* View mode toggle */}
-            <div className="flex border border-gray-300 dark:border-gray-600 rounded-lg overflow-hidden">
-              <button
-                onClick={() => setViewMode("grid")}
-                className={`px-3 py-2 text-sm font-medium transition-colors ${
-                  viewMode === "grid"
-                    ? "bg-blue-600 text-white"
-                    : "bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600"
-                }`}
-              >
-                <svg
-                  className="w-4 h-4"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"
-                  />
-                </svg>
-              </button>
-              <button
-                onClick={() => setViewMode("masonry")}
-                className={`px-3 py-2 text-sm font-medium transition-colors ${
-                  viewMode === "masonry"
-                    ? "bg-blue-600 text-white"
-                    : "bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600"
-                }`}
-              >
-                <svg
-                  className="w-4 h-4"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
-                  />
-                </svg>
-              </button>
-            </div>
-          </div>
-        </div>
+                  {/* Refresh Button */}
+                  <button
+                    onClick={() => loadImages(1)}
+                    disabled={loading}
+                    className="px-4 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white/80 dark:bg-gray-700/80 backdrop-blur-sm text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-600 transition-all duration-300 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
+                    title="Refresh Gallery"
+                  >
+                    <svg
+                      className={`w-5 h-5 ${loading ? "animate-spin" : ""}`}
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                      />
+                    </svg>
+                  </button>
 
-        {/* Gallery */}
-        {loading ? (
-          <GridSkeleton />
-        ) : images.length === 0 ? (
-          <div className="text-center py-12">
-            <svg
-              className="w-16 h-16 mx-auto mb-4 text-gray-400"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-              />
-            </svg>
-            <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
-              No images found
-            </h3>
-            <p className="text-gray-600 dark:text-gray-400">
-              Upload some images to get started.
-            </p>
-          </div>
-        ) : (
-          <>
-            <div
-              className={`grid gap-4 ${
-                viewMode === "grid"
-                  ? "grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4"
-                  : "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
-              }`}
-            >
-              {filteredAndSortedImages.map((image, index) => (
-                <ImageCard
-                  key={image.id}
-                  image={image}
-                  index={index}
-                  onClick={handleImageClick}
-                />
-              ))}
-            </div>
-
-            {/* Load more button */}
-            {hasMore && (
-              <div className="flex justify-center mt-8">
-                <Button
-                  onClick={handleLoadMore}
-                  loading={loadingMore}
-                  disabled={loadingMore}
-                  size="lg"
-                >
-                  {loadingMore ? (
-                    <>
-                      <Spinner size="sm" className="mr-2" />
-                      Loading more...
-                    </>
-                  ) : (
-                    "Load More Images"
-                  )}
-                </Button>
+                  {/* Enhanced View mode toggle */}
+                  <div className="flex border-2 border-gray-200 dark:border-gray-600 rounded-xl overflow-hidden shadow-lg backdrop-blur-sm bg-white/50 dark:bg-gray-700/50">
+                    <button
+                      onClick={() => setViewMode("grid")}
+                      className={`px-4 py-3 text-sm font-semibold transition-all duration-300 ${
+                        viewMode === "grid"
+                          ? "bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg"
+                          : "bg-transparent text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600"
+                      }`}
+                      title="Grid View"
+                    >
+                      <svg
+                        className="w-5 h-5"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"
+                        />
+                      </svg>
+                    </button>
+                    <button
+                      onClick={() => setViewMode("masonry")}
+                      className={`px-4 py-3 text-sm font-semibold transition-all duration-300 ${
+                        viewMode === "masonry"
+                          ? "bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg"
+                          : "bg-transparent text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600"
+                      }`}
+                      title="Masonry View"
+                    >
+                      <svg
+                        className="w-5 h-5"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
+                        />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
               </div>
-            )}
-          </>
-        )}
+            </div>
+          </div>
 
-        {/* Image Modal */}
-        {selectedImage && (
-          <ImageModal
-            isOpen={true}
-            onClose={handleCloseModal}
-            images={filteredAndSortedImages}
-            currentIndex={selectedImage.index}
-            onIndexChange={handleModalIndexChange}
-          />
-        )}
+          {/* Gallery */}
+          {loading ? (
+            <GridSkeleton />
+          ) : images.length === 0 ? (
+            <div className="text-center py-12">
+              <svg
+                className="w-16 h-16 mx-auto mb-4 text-gray-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                />
+              </svg>
+              <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+                No images found
+              </h3>
+              <p className="text-gray-600 dark:text-gray-400">
+                Upload some images to get started.
+              </p>
+            </div>
+          ) : (
+            <>
+              <div
+                className={`grid gap-4 ${
+                  viewMode === "grid"
+                    ? "grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4"
+                    : "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
+                }`}
+              >
+                {filteredAndSortedImages.map((image, index) => (
+                  <ImageCard
+                    key={image.id}
+                    image={image}
+                    index={index}
+                    onClick={handleImageClick}
+                  />
+                ))}
+              </div>
+
+              {/* Load more button */}
+              {hasMore && (
+                <div className="flex justify-center mt-8">
+                  <Button
+                    onClick={handleLoadMore}
+                    loading={loadingMore}
+                    disabled={loadingMore}
+                    size="lg"
+                  >
+                    {loadingMore ? (
+                      <>
+                        <Spinner size="sm" className="mr-2" />
+                        Loading more...
+                      </>
+                    ) : (
+                      "Load More Images"
+                    )}
+                  </Button>
+                </div>
+              )}
+            </>
+          )}
+
+          {/* Image Modal */}
+          {selectedImage && (
+            <ImageModal
+              isOpen={true}
+              onClose={handleCloseModal}
+              images={filteredAndSortedImages}
+              currentIndex={selectedImage.index}
+              onIndexChange={handleModalIndexChange}
+            />
+          )}
+        </div>
       </div>
     </DashboardLayout>
   );

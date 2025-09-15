@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { Card, Skeleton } from "../components/ui";
 import DashboardLayout from "../components/DashboardLayout";
 import { useToast } from "../contexts/ToastContext";
+import { mockUploadedImages } from "../utils/mockApi";
 
 const DashboardPage = () => {
   const { user } = useAuth();
@@ -94,8 +95,28 @@ const DashboardPage = () => {
     try {
       toast.info("Uploading image...");
 
-      // Simulate upload process
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+      // Convert file to base64 data URL
+      const reader = new FileReader();
+
+      const imageData = await new Promise((resolve, reject) => {
+        reader.onload = (e) => {
+          resolve({
+            id: `upload_${Date.now()}_${Math.random()
+              .toString(36)
+              .substr(2, 9)}`,
+            url: e.target.result,
+            filename: file.name,
+            size: file.size,
+            uploadedAt: new Date().toISOString(),
+            type: "uploaded",
+          });
+        };
+        reader.onerror = () => reject(new Error("Failed to read file"));
+        reader.readAsDataURL(file);
+      });
+
+      // Actually save the image using the API
+      await mockUploadedImages.saveImage(imageData);
 
       // Update stats
       setStats((prev) => ({
@@ -120,6 +141,7 @@ const DashboardPage = () => {
         fileInputRef.current.value = "";
       }
     } catch (error) {
+      console.error("Upload error:", error);
       toast.error("Failed to upload image. Please try again.");
     }
   };
