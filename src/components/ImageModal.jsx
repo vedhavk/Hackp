@@ -27,9 +27,15 @@ const ImageModal = ({
       setImageLoading(true);
       setZoomLevel(1);
       setImagePosition({ x: 0, y: 0 });
-      onIndexChange?.(currentImageIndex);
     }
-  }, [currentImageIndex, currentImage, onIndexChange]);
+  }, [currentImageIndex, currentImage]);
+
+  // Separate effect for index change callback to prevent infinite loops
+  useEffect(() => {
+    if (onIndexChange && currentImageIndex !== currentIndex) {
+      onIndexChange(currentImageIndex);
+    }
+  }, [currentImageIndex, onIndexChange, currentIndex]);
 
   const handlePrevious = useCallback(() => {
     if (currentImageIndex > 0) {
@@ -88,20 +94,21 @@ const ImageModal = ({
     setImageLoading(false);
   };
 
-  const handleZoomIn = () => {
+  const handleZoomIn = useCallback(() => {
     setZoomLevel((prev) => Math.min(prev * 1.2, 3));
-  };
+  }, []);
 
-  const handleZoomOut = () => {
+  const handleZoomOut = useCallback(() => {
     setZoomLevel((prev) => Math.max(prev / 1.2, 0.5));
-  };
+  }, []);
 
-  const handleResetZoom = () => {
+  const handleResetZoom = useCallback(() => {
     setZoomLevel(1);
     setImagePosition({ x: 0, y: 0 });
-  };
+  }, []);
 
   const handleMouseDown = (e) => {
+    e.preventDefault();
     if (zoomLevel > 1) {
       setIsDragging(true);
       setDragStart({
@@ -112,6 +119,7 @@ const ImageModal = ({
   };
 
   const handleMouseMove = (e) => {
+    e.preventDefault();
     if (isDragging && zoomLevel > 1) {
       setImagePosition({
         x: e.clientX - dragStart.x,
@@ -123,6 +131,32 @@ const ImageModal = ({
   const handleMouseUp = () => {
     setIsDragging(false);
   };
+
+  // Add wheel zoom functionality
+  const handleWheel = useCallback((e) => {
+    e.preventDefault();
+    if (e.deltaY < 0) {
+      // Zoom in
+      setZoomLevel((prev) => Math.min(prev * 1.1, 3));
+    } else {
+      // Zoom out
+      setZoomLevel((prev) => Math.max(prev / 1.1, 0.5));
+    }
+  }, []);
+
+  // Add double-click to zoom
+  const handleDoubleClick = useCallback(
+    (e) => {
+      e.preventDefault();
+      if (zoomLevel === 1) {
+        setZoomLevel(2);
+      } else {
+        setZoomLevel(1);
+        setImagePosition({ x: 0, y: 0 });
+      }
+    },
+    [zoomLevel]
+  );
 
   if (!currentImage) return null;
 
@@ -152,8 +186,12 @@ const ImageModal = ({
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={handleZoomOut}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleZoomOut();
+                }}
                 className="text-white hover:bg-white hover:bg-opacity-20"
+                title="Zoom Out"
               >
                 <svg
                   className="w-4 h-4"
@@ -177,8 +215,12 @@ const ImageModal = ({
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={handleZoomIn}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleZoomIn();
+                }}
                 className="text-white hover:bg-white hover:bg-opacity-20"
+                title="Zoom In"
               >
                 <svg
                   className="w-4 h-4"
@@ -198,8 +240,12 @@ const ImageModal = ({
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={handleResetZoom}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleResetZoom();
+                }}
                 className="text-white hover:bg-white hover:bg-opacity-20"
+                title="Reset Zoom"
               >
                 Reset
               </Button>
@@ -207,8 +253,12 @@ const ImageModal = ({
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={onClose}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onClose();
+                }}
                 className="text-white hover:bg-white hover:bg-opacity-20"
+                title="Close"
               >
                 <svg
                   className="w-5 h-5"
@@ -230,11 +280,17 @@ const ImageModal = ({
 
         {/* Image container */}
         <div
-          className="flex-1 flex items-center justify-center overflow-hidden cursor-move"
+          className="flex-1 flex items-center justify-center overflow-hidden"
           onMouseDown={handleMouseDown}
           onMouseMove={handleMouseMove}
           onMouseUp={handleMouseUp}
           onMouseLeave={handleMouseUp}
+          onWheel={handleWheel}
+          onDoubleClick={handleDoubleClick}
+          style={{
+            cursor:
+              zoomLevel > 1 ? (isDragging ? "grabbing" : "grab") : "default",
+          }}
         >
           {imageLoading && (
             <div className="absolute inset-0 flex items-center justify-center">
@@ -245,13 +301,11 @@ const ImageModal = ({
           <img
             src={currentImage.url}
             alt={currentImage.title || "Image"}
-            className="max-w-none transition-transform duration-200"
+            className="max-w-none transition-transform duration-200 select-none"
             style={{
               transform: `scale(${zoomLevel}) translate(${
                 imagePosition.x / zoomLevel
               }px, ${imagePosition.y / zoomLevel}px)`,
-              cursor:
-                zoomLevel > 1 ? (isDragging ? "grabbing" : "grab") : "default",
             }}
             onLoad={handleImageLoad}
             onDragStart={(e) => e.preventDefault()}
@@ -334,6 +388,8 @@ const ImageModal = ({
         <div className="absolute bottom-20 right-4 text-white text-xs space-y-1 bg-black bg-opacity-50 p-3 rounded-lg">
           <div>← → Navigate</div>
           <div>+ - Zoom</div>
+          <div>Mouse wheel: Zoom</div>
+          <div>Double-click: Toggle zoom</div>
           <div>0 Reset</div>
           <div>Esc Close</div>
         </div>

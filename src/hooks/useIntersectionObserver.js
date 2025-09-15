@@ -1,47 +1,49 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 
 const useIntersectionObserver = (options = {}) => {
   const [entries, setEntries] = useState([]);
-  const [observer, setObserver] = useState(null);
+  const observerRef = useRef(null);
 
-  const { threshold = 0.1, root = null, rootMargin = "0px" } = options;
+  // Memoize options to prevent unnecessary re-renders
+  const memoizedOptions = useMemo(
+    () => ({
+      threshold: options.threshold ?? 0.1,
+      root: options.root ?? null,
+      rootMargin: options.rootMargin ?? "0px",
+    }),
+    [options.threshold, options.root, options.rootMargin]
+  );
 
+  // Create observer only once or when options change
   useEffect(() => {
-    const obs = new IntersectionObserver(
-      (observedEntries) => {
-        setEntries(observedEntries);
-      },
-      {
-        threshold,
-        root,
-        rootMargin,
-      }
-    );
+    // Clean up previous observer
+    if (observerRef.current) {
+      observerRef.current.disconnect();
+    }
 
-    setObserver(obs);
+    // Create new observer
+    observerRef.current = new IntersectionObserver((observedEntries) => {
+      setEntries(observedEntries);
+    }, memoizedOptions);
 
     return () => {
-      obs.disconnect();
+      if (observerRef.current) {
+        observerRef.current.disconnect();
+      }
     };
-  }, [threshold, root, rootMargin]);
+  }, [memoizedOptions]);
 
-  const observe = useCallback(
-    (element) => {
-      if (observer && element) {
-        observer.observe(element);
-      }
-    },
-    [observer]
-  );
+  const observe = useCallback((element) => {
+    if (observerRef.current && element) {
+      observerRef.current.observe(element);
+    }
+  }, []);
 
-  const unobserve = useCallback(
-    (element) => {
-      if (observer && element) {
-        observer.unobserve(element);
-      }
-    },
-    [observer]
-  );
+  const unobserve = useCallback((element) => {
+    if (observerRef.current && element) {
+      observerRef.current.unobserve(element);
+    }
+  }, []);
 
   return { entries, observe, unobserve };
 };

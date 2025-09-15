@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useMemo } from "react";
 import PropTypes from "prop-types";
 import useIntersectionObserver from "../hooks/useIntersectionObserver";
 import { Skeleton } from "../components/ui";
@@ -18,10 +18,16 @@ const LazyImage = ({
   const [imageSrc, setImageSrc] = useState(thumbnail || null);
   const imageRef = useRef(null);
 
-  const { entries, observe } = useIntersectionObserver({
-    threshold: 0.1,
-    rootMargin: "50px",
-  });
+  // Memoize the intersection observer options to prevent infinite re-renders
+  const intersectionOptions = useMemo(
+    () => ({
+      threshold: 0.1,
+      rootMargin: "50px",
+    }),
+    []
+  );
+
+  const { entries, observe } = useIntersectionObserver(intersectionOptions);
 
   useEffect(() => {
     if (imageRef.current) {
@@ -30,15 +36,20 @@ const LazyImage = ({
   }, [observe]);
 
   useEffect(() => {
+    if (entries.length === 0) return;
+
     const entry = entries.find((entry) => entry.target === imageRef.current);
 
-    if (entry?.isIntersecting && imageState === "idle") {
+    if (entry?.isIntersecting && imageState === "idle" && src) {
       loadImage();
     }
-  }, [entries, imageState]);
+  }, [entries, src]); // Keep src in dependencies but remove imageState to prevent loops
 
   const loadImage = () => {
     if (!src) return;
+
+    // Check if already loading or loaded to prevent duplicate requests
+    if (imageState !== "idle") return;
 
     setImageState("loading");
 
