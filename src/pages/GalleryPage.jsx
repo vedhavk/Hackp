@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { useLocation } from "react-router-dom";
-import { mockGallery } from "../utils/mockApi";
+import { mockGallery, mockUploadedImages } from "../utils/mockApi";
 import { useToast } from "../contexts/ToastContext";
 import DashboardLayout from "../components/DashboardLayout";
 import LazyImage from "../components/LazyImage";
@@ -18,7 +18,7 @@ const GalleryPage = () => {
   const [viewMode, setViewMode] = useState("grid"); // grid, masonry
   const [sortBy, setSortBy] = useState("newest");
   const [filterBy, setFilterBy] = useState("all"); // all, uploaded, mock
-  const { error: toastError } = useToast();
+  const { error: toastError, success: toastSuccess } = useToast();
 
   const loadImages = useCallback(
     async (page = 1, append = false) => {
@@ -69,16 +69,22 @@ const GalleryPage = () => {
 
     window.addEventListener("storage", handleStorageChange);
 
-    // Also listen for custom events from same window (same-tab uploads)
+    // Also listen for custom events from same window (same-tab uploads/deletes)
     const handleImageUploaded = (e) => {
       loadImages(1);
     };
 
+    const handleImageDeleted = (e) => {
+      loadImages(1);
+    };
+
     window.addEventListener("imageUploaded", handleImageUploaded);
+    window.addEventListener("imageDeleted", handleImageDeleted);
 
     return () => {
       window.removeEventListener("storage", handleStorageChange);
       window.removeEventListener("imageUploaded", handleImageUploaded);
+      window.removeEventListener("imageDeleted", handleImageDeleted);
     };
   }, [loadImages]);
 
@@ -155,6 +161,57 @@ const GalleryPage = () => {
     }
   };
 
+  const handleDeleteImage = async (imageId, event) => {
+    // Prevent the card click event from firing
+    event.stopPropagation();
+
+    if (
+      !window.confirm(
+        "Are you sure you want to delete this image? This action cannot be undone."
+      )
+    ) {
+      return;
+    }
+
+    try {
+      await mockUploadedImages.deleteImage(imageId);
+
+      // Remove the image from local state immediately for better UX
+      setImages((prevImages) => prevImages.filter((img) => img.id !== imageId));
+
+      // If the deleted image was selected in modal, close the modal
+      if (selectedImage && selectedImage.image.id === imageId) {
+        setSelectedImage(null);
+      }
+
+      toastSuccess("Image deleted successfully");
+
+      // Reload images to ensure consistency
+      loadImages(1);
+    } catch (error) {
+      toastError("Failed to delete image");
+    }
+  };
+
+  const handleDeleteFromModal = async (imageId) => {
+    try {
+      await mockUploadedImages.deleteImage(imageId);
+
+      // Remove the image from local state immediately for better UX
+      setImages((prevImages) => prevImages.filter((img) => img.id !== imageId));
+
+      // Close the modal since the current image was deleted
+      setSelectedImage(null);
+
+      toastSuccess("Image deleted successfully");
+
+      // Reload images to ensure consistency
+      loadImages(1);
+    } catch (error) {
+      toastError("Failed to delete image");
+    }
+  };
+
   const GridSkeleton = () => (
     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
       {Array.from({ length: 12 }).map((_, index) => (
@@ -173,7 +230,7 @@ const GalleryPage = () => {
     <Card
       padding="none"
       hover
-      className="overflow-hidden cursor-pointer group animate-fade-in-up"
+      className="overflow-hidden cursor-pointer group animate-fade-in-up relative"
       onClick={() => onClick(image, index)}
     >
       <div className="relative">
@@ -210,9 +267,36 @@ const GalleryPage = () => {
           </div>
         </div>
 
+        {/* Delete button for uploaded images */}
+        {image.isUploaded && (
+          <button
+            onClick={(e) => handleDeleteImage(image.id, e)}
+            className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 bg-red-600 hover:bg-red-700 text-white p-2 rounded-full shadow-lg hover:shadow-xl transform hover:scale-110 transition-all duration-300"
+            title="Delete image"
+          >
+            <svg
+              className="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+              />
+            </svg>
+          </button>
+        )}
+
         {/* Annotation count badge */}
         {image.annotations && image.annotations.length > 0 && (
-          <div className="absolute top-2 right-2 bg-blue-600 text-white text-xs px-2 py-1 rounded-full">
+          <div
+            className={`absolute top-2 ${
+              image.isUploaded ? "left-2" : "right-2"
+            } bg-blue-600 text-white text-xs px-2 py-1 rounded-full`}
+          >
             {image.annotations.length} annotation
             {image.annotations.length !== 1 ? "s" : ""}
           </div>
@@ -220,7 +304,13 @@ const GalleryPage = () => {
 
         {/* Uploaded image badge */}
         {image.isUploaded && (
-          <div className="absolute top-2 left-2 bg-green-600 text-white text-xs px-2 py-1 rounded-full flex items-center gap-1">
+          <div
+            className={`absolute ${
+              image.annotations && image.annotations.length > 0
+                ? "bottom-2"
+                : "top-2"
+            } left-2 bg-green-600 text-white text-xs px-2 py-1 rounded-full flex items-center gap-1`}
+          >
             <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
               <path
                 fillRule="evenodd"
@@ -473,6 +563,7 @@ const GalleryPage = () => {
               images={filteredAndSortedImages}
               currentIndex={selectedImage.index}
               onIndexChange={handleModalIndexChange}
+              onDelete={handleDeleteFromModal}
             />
           )}
         </div>

@@ -386,6 +386,13 @@ export const mockUploadedImages = {
     const filteredImages = uploadedImages.filter((img) => img.id !== imageId);
     saveUploadedImagesToStorage(filteredImages);
 
+    // Dispatch custom event to notify gallery to refresh
+    window.dispatchEvent(
+      new CustomEvent("imageDeleted", {
+        detail: { imageId },
+      })
+    );
+
     return { success: true };
   },
 };
