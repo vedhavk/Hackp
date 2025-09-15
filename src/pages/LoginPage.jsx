@@ -3,7 +3,7 @@ import { Navigate, useLocation, Link } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { useTheme } from "../contexts/ThemeContext";
 import { useToast } from "../contexts/ToastContext";
-import { Button, Card, Spinner } from "../components/ui";
+import { Button, Card, Spinner, Modal } from "../components/ui";
 
 const LoginPage = () => {
   const [credentials, setCredentials] = useState({
@@ -13,6 +13,13 @@ const LoginPage = () => {
   const [rememberMe, setRememberMe] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [validationErrors, setValidationErrors] = useState({});
+  const [showPasswordResetModal, setShowPasswordResetModal] = useState(false);
+  const [resetEmail, setResetEmail] = useState("");
+  const [resetStep, setResetStep] = useState("email"); // "email", "code", "newPassword"
+  const [resetCode, setResetCode] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmNewPassword, setConfirmNewPassword] = useState("");
+  const [resetLoading, setResetLoading] = useState(false);
   const { login, loading, isAuthenticated } = useAuth();
   const { isDark, toggleTheme } = useTheme();
   const {
@@ -72,6 +79,123 @@ const LoginPage = () => {
         error.message || "Login failed. Please check your credentials."
       );
     }
+  };
+
+  // Password Reset Functions
+  const handleForgotPassword = () => {
+    setShowPasswordResetModal(true);
+    setResetStep("email");
+    setResetEmail("");
+    setResetCode("");
+    setNewPassword("");
+    setConfirmNewPassword("");
+  };
+
+  const handleResetEmailSubmit = async (e) => {
+    e.preventDefault();
+    if (!resetEmail.trim()) {
+      toastError("Please enter your email address");
+      return;
+    }
+
+    setResetLoading(true);
+    try {
+      // Simulate API call
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+
+      // For demo purposes, accept any email format
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(resetEmail)) {
+        toastError("Please enter a valid email address");
+        setResetLoading(false);
+        return;
+      }
+
+      toastSuccess("Reset code sent to your email!");
+      setResetStep("code");
+    } catch (error) {
+      toastError("Failed to send reset code. Please try again.");
+    } finally {
+      setResetLoading(false);
+    }
+  };
+
+  const handleResetCodeSubmit = async (e) => {
+    e.preventDefault();
+    if (!resetCode.trim()) {
+      toastError("Please enter the reset code");
+      return;
+    }
+
+    setResetLoading(true);
+    try {
+      // Simulate API call
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
+      // For demo purposes, accept any 6-digit code
+      if (resetCode.length !== 6) {
+        toastError("Reset code must be 6 digits");
+        setResetLoading(false);
+        return;
+      }
+
+      toastSuccess("Code verified! Please set your new password.");
+      setResetStep("newPassword");
+    } catch (error) {
+      toastError("Invalid reset code. Please try again.");
+    } finally {
+      setResetLoading(false);
+    }
+  };
+
+  const handleNewPasswordSubmit = async (e) => {
+    e.preventDefault();
+
+    if (!newPassword || !confirmNewPassword) {
+      toastError("Please fill in both password fields");
+      return;
+    }
+
+    if (newPassword.length < 6) {
+      toastError("Password must be at least 6 characters");
+      return;
+    }
+
+    if (newPassword !== confirmNewPassword) {
+      toastError("Passwords do not match");
+      return;
+    }
+
+    setResetLoading(true);
+    try {
+      // Simulate API call
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+
+      toastSuccess(
+        "Password reset successful! You can now login with your new password."
+      );
+      setShowPasswordResetModal(false);
+
+      // Reset all states
+      setResetStep("email");
+      setResetEmail("");
+      setResetCode("");
+      setNewPassword("");
+      setConfirmNewPassword("");
+    } catch (error) {
+      toastError("Failed to reset password. Please try again.");
+    } finally {
+      setResetLoading(false);
+    }
+  };
+
+  const closeResetModal = () => {
+    setShowPasswordResetModal(false);
+    setResetStep("email");
+    setResetEmail("");
+    setResetCode("");
+    setNewPassword("");
+    setConfirmNewPassword("");
   };
 
   return (
@@ -380,9 +504,7 @@ const LoginPage = () => {
                 <button
                   type="button"
                   className="font-medium text-blue-600 dark:text-blue-400 hover:text-blue-500 dark:hover:text-blue-300 transition-colors"
-                  onClick={() =>
-                    toastInfo("Password reset functionality coming soon!")
-                  }
+                  onClick={handleForgotPassword}
                 >
                   Forgot your password?
                 </button>
@@ -453,6 +575,155 @@ const LoginPage = () => {
           </div>
         </Card>
       </div>
+
+      {/* Password Reset Modal */}
+      <Modal
+        isOpen={showPasswordResetModal}
+        onClose={closeResetModal}
+        title="Reset Your Password"
+        size="md"
+      >
+        {resetStep === "email" && (
+          <form onSubmit={handleResetEmailSubmit} className="space-y-4">
+            <div>
+              <p className="text-gray-600 dark:text-gray-400 mb-4">
+                Enter your email address and we'll send you a reset code.
+              </p>
+              <label
+                htmlFor="resetEmail"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+              >
+                Email Address
+              </label>
+              <input
+                type="email"
+                id="resetEmail"
+                value={resetEmail}
+                onChange={(e) => setResetEmail(e.target.value)}
+                className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-colors"
+                placeholder="Enter your email address"
+                required
+              />
+            </div>
+            <div className="flex space-x-3">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={closeResetModal}
+                className="flex-1"
+              >
+                Cancel
+              </Button>
+              <Button type="submit" loading={resetLoading} className="flex-1">
+                Send Reset Code
+              </Button>
+            </div>
+          </form>
+        )}
+
+        {resetStep === "code" && (
+          <form onSubmit={handleResetCodeSubmit} className="space-y-4">
+            <div>
+              <p className="text-gray-600 dark:text-gray-400 mb-4">
+                We've sent a 6-digit code to <strong>{resetEmail}</strong>.
+                Enter it below to continue.
+              </p>
+              <label
+                htmlFor="resetCode"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+              >
+                Reset Code
+              </label>
+              <input
+                type="text"
+                id="resetCode"
+                value={resetCode}
+                onChange={(e) =>
+                  setResetCode(e.target.value.replace(/\D/g, "").slice(0, 6))
+                }
+                className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-colors text-center text-lg tracking-widest"
+                placeholder="000000"
+                maxLength="6"
+                required
+              />
+            </div>
+            <div className="flex space-x-3">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setResetStep("email")}
+                className="flex-1"
+              >
+                Back
+              </Button>
+              <Button type="submit" loading={resetLoading} className="flex-1">
+                Verify Code
+              </Button>
+            </div>
+          </form>
+        )}
+
+        {resetStep === "newPassword" && (
+          <form onSubmit={handleNewPasswordSubmit} className="space-y-4">
+            <div>
+              <p className="text-gray-600 dark:text-gray-400 mb-4">
+                Create a new password for your account.
+              </p>
+              <div className="space-y-4">
+                <div>
+                  <label
+                    htmlFor="newPassword"
+                    className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                  >
+                    New Password
+                  </label>
+                  <input
+                    type="password"
+                    id="newPassword"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-colors"
+                    placeholder="Enter new password"
+                    minLength="6"
+                    required
+                  />
+                </div>
+                <div>
+                  <label
+                    htmlFor="confirmNewPassword"
+                    className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                  >
+                    Confirm New Password
+                  </label>
+                  <input
+                    type="password"
+                    id="confirmNewPassword"
+                    value={confirmNewPassword}
+                    onChange={(e) => setConfirmNewPassword(e.target.value)}
+                    className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-colors"
+                    placeholder="Confirm new password"
+                    minLength="6"
+                    required
+                  />
+                </div>
+              </div>
+            </div>
+            <div className="flex space-x-3">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setResetStep("code")}
+                className="flex-1"
+              >
+                Back
+              </Button>
+              <Button type="submit" loading={resetLoading} className="flex-1">
+                Reset Password
+              </Button>
+            </div>
+          </form>
+        )}
+      </Modal>
     </div>
   );
 };

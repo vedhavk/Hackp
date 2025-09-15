@@ -8,8 +8,10 @@ A modern, responsive web application for image management, annotation, and galle
 
 - **User Registration**: Create new accounts with secure validation
 - **User Login**: Secure authentication with session management
+- **Password Reset**: Forgot password functionality with email verification
 - **Protected Routes**: Access control for authenticated users only
 - **User Profiles**: Personalized user profile management
+- **Remember Me**: Optional persistent login sessions
 
 ### 📁 Image Management
 
@@ -160,10 +162,11 @@ src/
 ### Getting Started
 
 1. **Registration**: Create a new account or login with existing credentials
-2. **Dashboard**: Access the main dashboard to see overview statistics
-3. **Upload Images**: Use the upload page to add new images
-4. **Annotation**: Click and drag on images to create annotation boxes
-5. **Gallery**: Browse all images with filtering and sorting options
+2. **Password Recovery**: Use "Forgot your password?" if you need to reset your password
+3. **Dashboard**: Access the main dashboard to see overview statistics
+4. **Upload Images**: Use the upload page to add new images
+5. **Annotation**: Click and drag on images to create annotation boxes
+6. **Gallery**: Browse all images with filtering and sorting options
 
 ### Key Features Usage
 
@@ -173,6 +176,18 @@ src/
 - Drag and drop images or click to browse
 - Supported formats: JPEG, PNG, GIF, WebP (max 10MB)
 - Images are automatically saved and can be annotated immediately
+
+#### Authentication & Account Management
+
+- **Login**: Enter username and password to access your account
+- **Registration**: Create new account with email, username, and password validation
+- **Password Reset**:
+  - Click "Forgot your password?" on the login page
+  - Enter your registered email address
+  - Check your email for reset instructions
+  - Follow the link to create a new password
+- **Remember Me**: Check the option to stay logged in across browser sessions
+- **Secure Sessions**: Automatic logout after inactivity for security
 
 #### Creating Annotations
 
