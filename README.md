@@ -2,20 +2,20 @@
 
 A comprehensive, modern web application for advanced image management, annotation, and gallery organization. Built with cutting-edge technologies including React 19, Vite, and Tailwind CSS, this platform delivers a professional-grade solution for photo annotation, analysis, and collaborative workflow management.
 
-## 🌟 Key Highlights
+## Key Highlights
 
-- **� Mobile-First Responsive Design**: Fully responsive dashboard optimized for all devices with touch-friendly interfaces
-- **� Dynamic Theme System**: Seamless light/dark theme switching with system preference detection
-- **🔒 JWT Authentication**: Secure login system with protected routes and session management
-- **�️ Advanced Photo Gallery**: Thumbnail display with lazy loading and full-screen preview capabilities
-- **🎯 Interactive Annotations**: Click-and-drag annotation tools with text labeling and REST API integration
-- **⚡ High Performance**: Optimized with lazy loading, code splitting, and modern React patterns
+- **Mobile-First Responsive Design**: Fully responsive dashboard optimized for all devices with touch-friendly interfaces
+- **Dynamic Theme System**: Seamless light/dark theme switching with system preference detection
+- **JWT Authentication**: Secure login system with protected routes and session management
+- **Advanced Photo Gallery**: Thumbnail display with lazy loading and full-screen preview capabilities
+- **Interactive Annotations**: Click-and-drag annotation tools with text labeling and REST API integration
+- **High Performance**: Optimized with lazy loading, code splitting, and modern React patterns
 
-## 🆕 Core Features & Capabilities
+##  Core Features & Capabilities
 
-### 🎯 Key Project Requirements Implementation
+###  Key Project Requirements Implementation
 
-- **� Responsive Mobile-First Dashboard**:
+- **Responsive Mobile-First Dashboard**:
 
   - Fully responsive design optimized for all devices
   - Mobile-first approach with touch-friendly interfaces
@@ -57,9 +57,9 @@ A comprehensive, modern web application for advanced image management, annotatio
   - Edit and delete existing annotations with confirmation dialogs
   - Category-based organization with color coding
 
-### 🚀 Additional Advanced Features
+### Additional Advanced Features
 
-- **�🗑️ Complete Delete Functionality**:
+- **🗑️ Complete Delete Functionality**:
 
   - Professional delete buttons for uploaded images
   - Safety confirmation dialogs to prevent accidental deletions
@@ -142,7 +142,7 @@ A comprehensive, modern web application for advanced image management, annotatio
 - **Event-Driven Updates**: Real-time UI synchronization using custom event system
 - **Modern Animations**: CSS-based animations with staggered timing and smooth transitions
 
-## � Quick Start Guide
+## Quick Start Guide
 
 ### Prerequisites
 
@@ -249,7 +249,7 @@ PhotoAnnotator/
 └── README.md                      # This documentation
 ```
 
-## 🎮 Comprehensive Usage Guide
+## Comprehensive Usage Guide
 
 ### Getting Started
 
@@ -342,7 +342,7 @@ PhotoAnnotator/
    - **Privacy**: Manage data sharing and visibility settings
    - **Account**: Handle password changes, data export, account management
 
-## 🔑 Advanced Component Architecture
+##  Advanced Component Architecture
 
 ### Authentication System
 
@@ -393,7 +393,7 @@ PhotoAnnotator/
 - **Theme System**: Consistent dark/light mode with CSS custom properties
 - **Performance**: Optimized rendering with React.memo and useMemo
 
-## 🌟 Performance Optimization Features
+##  Performance Optimization Features
 
 ### Frontend Performance
 
@@ -419,7 +419,7 @@ PhotoAnnotator/
 - **ESLint Integration**: Code quality enforcement
 - **Component Storybook**: Component documentation and testing (planned)
 
-## 🤝 Contributing to PhotoAnnotator
+##  Contributing to PhotoAnnotator
 
 We welcome contributions from the community! Here's how you can help improve PhotoAnnotator:
 
@@ -457,25 +457,16 @@ We welcome contributions from the community! Here's how you can help improve Pho
 
 ### Areas for Contribution
 
-- 🐛 **Bug Fixes**: Help identify and fix issues
-- ✨ **New Features**: Implement requested features from the roadmap
-- 📚 **Documentation**: Improve documentation and examples
-- 🎨 **UI/UX**: Enhance the user interface and experience
-- ⚡ **Performance**: Optimize performance and loading times
-- 🌐 **Internationalization**: Add support for new languages
+-  **Bug Fixes**: Help identify and fix issues
+-  **New Features**: Implement requested features from the roadmap
+-  **Documentation**: Improve documentation and examples
+-  **UI/UX**: Enhance the user interface and experience
+-  **Performance**: Optimize performance and loading times
+-  **Internationalization**: Add support for new languages
 
-## 🌐 Browser Support & Compatibility
 
-### Supported Browsers
 
-| Browser           | Minimum Version | Notes                     |
-| ----------------- | --------------- | ------------------------- |
-| **Chrome**        | 90+             | Full feature support      |
-| **Firefox**       | 88+             | Full feature support      |
-| **Safari**        | 14+             | Full feature support      |
-| **Edge**          | 90+             | Full feature support      |
-| **Mobile Safari** | iOS 14+         | Touch-optimized interface |
-| **Chrome Mobile** | Android 90+     | Touch-optimized interface |
+
 
 ### Feature Compatibility
 
@@ -485,7 +476,7 @@ We welcome contributions from the community! Here's how you can help improve Pho
 - **Responsive Design**: Mobile-first approach with touch support
 - **Progressive Enhancement**: Core functionality works on older browsers
 
-## 🐛 Known Issues & Limitations
+##  Known Issues & Limitations
 
 ### Current Limitations
 
@@ -501,7 +492,7 @@ We welcome contributions from the community! Here's how you can help improve Pho
 - **Data Backup**: Export your data regularly using the settings panel
 - **Browser Storage**: Clear localStorage if experiencing issues
 
-## 🚀 Future Roadmap & Enhancements
+##  Future Roadmap & Enhancements
 
 ### Short-term Goals (Next 3 months)
 
@@ -546,7 +537,7 @@ We welcome contributions from the community! Here's how you can help improve Pho
 - **Accessibility Score**: 95+ on Lighthouse accessibility audit
 - **SEO Score**: 90+ on Lighthouse SEO audit
 
-## 🛡️ Security & Privacy
+##  Security & Privacy
 
 ### Security Measures
 
@@ -564,42 +555,15 @@ We welcome contributions from the community! Here's how you can help improve Pho
 - **Transparent Policies**: Clear privacy policy and data usage information
 - **User Consent**: Explicit consent for data collection and processing
 
-## 📞 Support & Community
 
-### Getting Help
 
-- **📚 Documentation**: Comprehensive guides and tutorials
-- **💬 Community Forum**: Join our community discussions
-- **📧 Email Support**: support@photoannotator.com
-- **🐛 Bug Reports**: Use GitHub Issues for bug reports
-- **💡 Feature Requests**: Submit ideas through GitHub Discussions
 
-### Community Resources
 
-- **📖 Wiki**: Community-maintained documentation
-- **🎥 Video Tutorials**: Step-by-step video guides
-- **📝 Blog**: Latest updates, tips, and best practices
-- **🔄 Changelog**: Detailed release notes and updates
-- **📱 Social Media**: Follow us for updates and announcements
 
-## 📄 Legal & Licensing
 
-### License Information
 
-This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) file for details.
 
-### Third-party Licenses
 
-- **React**: MIT License
-- **Tailwind CSS**: MIT License
-- **Vite**: MIT License
-- **Other Dependencies**: See package.json for individual licenses
-
-### Attribution
-
-- Icons by **Heroicons** (MIT License)
-- Fonts by **Google Fonts** (Open Font License)
-- Images in demos are from **Unsplash** (Unsplash License)
 
 ## 👥 Team & Acknowledgments
 
@@ -610,9 +574,6 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
   - UI/UX design
   - Project architecture
 
-### Contributors
-
-We appreciate all contributors who have helped improve PhotoAnnotator. See our [Contributors](https://github.com/vedhavk/Hackp/graphs/contributors) page for a complete list.
 
 ### Special Thanks
 
@@ -630,13 +591,7 @@ We appreciate all contributors who have helped improve PhotoAnnotator. See our [
 
 ---
 
-## 🎯 Quick Links
 
-- **🚀 [Live Demo](http://localhost:5173)** - Try PhotoAnnotator now
-- **📖 [Documentation](docs/)** - Comprehensive guides
-- **🐛 [Report Issues](https://github.com/vedhavk/Hackp/issues)** - Bug reports and feature requests
-- **💬 [Discussions](https://github.com/vedhavk/Hackp/discussions)** - Community discussions
-- **📧 [Contact](mailto:support@photoannotator.com)** - Direct support
 
 ---
 
